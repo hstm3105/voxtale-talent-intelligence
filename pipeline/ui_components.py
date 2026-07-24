@@ -66,8 +66,8 @@ def format_text_field(val: Any) -> str:
 
 def build_candidate_html_table(records: List[Dict[str, Any]]) -> str:
     """
-    Builds a dark, glassmorphic HTML candidate table with inline Confidence Rings & Decision/Flag Chips.
-    Headers: Candidate & Resume | Decision | Score Ring | Flags | Key Strengths | Qualification Gaps | Recruiter Rationale
+    Builds a dark, glassmorphic HTML candidate table with inline Confidence Rings, Decision/Flag Chips & Assessed Role.
+    Headers: Candidate & Resume | Assessed Role | Decision | Score Ring | Flags | Key Strengths | Qualification Gaps | Recruiter Rationale
     """
     if not records:
         return "<p style='color: #8E8CA3; padding: 10px;'>No candidates found.</p>"
@@ -76,6 +76,7 @@ def build_candidate_html_table(records: List[Dict[str, Any]]) -> str:
     for r in records:
         cand_name = r.get("candidate_name", "Unknown Candidate")
         filename = r.get("resume_filename", r.get("filename", ""))
+        target_role = format_text_field(r.get("target_role") or r.get("jd_title") or r.get("role_title") or "N/A")
         decision = r.get("decision", "Shortlist")
         score = int(r.get("score_0_100", 0))
         flags = r.get("flags", "none")
@@ -88,13 +89,14 @@ def build_candidate_html_table(records: List[Dict[str, Any]]) -> str:
         flag_chip = render_chip(flags, kind="flag")
 
         # Cell 1: Candidate & Resume
-        # Cell 2: Decision
-        # Cell 3: Score Ring
-        # Cell 4: Flags
-        # Cell 5: Key Strengths
-        # Cell 6: Qualification Gaps
-        # Cell 7: Recruiter Rationale
-        rows_html += f"""<tr style="border-bottom: 1px solid #26262F;"><td style="padding: 12px 14px; color: #F2F1F7;"><div style="font-weight: 600; color: #F2F1F7; font-size: 0.92rem;">{cand_name}</div><div style="font-size: 0.78rem; color: #8E8CA3; font-family: 'JetBrains Mono', monospace; margin-top: 2px;">{filename}</div></td><td style="padding: 12px 14px; text-align: center; vertical-align: middle;">{dec_chip}</td><td style="padding: 12px 14px; text-align: center; vertical-align: middle;">{ring}</td><td style="padding: 12px 14px; text-align: center; vertical-align: middle;">{flag_chip}</td><td style="padding: 12px 14px; color: #8E8CA3; font-size: 0.84rem; max-width: 220px; line-height: 1.4;">{strengths}</td><td style="padding: 12px 14px; color: #8E8CA3; font-size: 0.84rem; max-width: 220px; line-height: 1.4;">{gaps}</td><td style="padding: 12px 14px; color: #8E8CA3; font-size: 0.84rem; max-width: 280px; line-height: 1.4;">{rationale}</td></tr>"""
+        # Cell 2: Assessed Role
+        # Cell 3: Decision
+        # Cell 4: Score Ring
+        # Cell 5: Flags
+        # Cell 6: Key Strengths
+        # Cell 7: Qualification Gaps
+        # Cell 8: Recruiter Rationale
+        rows_html += f"""<tr style="border-bottom: 1px solid #26262F;"><td style="padding: 12px 14px; color: #F2F1F7;"><div style="font-weight: 600; color: #F2F1F7; font-size: 0.92rem;">{cand_name}</div><div style="font-size: 0.78rem; color: #8E8CA3; font-family: 'JetBrains Mono', monospace; margin-top: 2px;">{filename}</div></td><td style="padding: 12px 14px; color: #8E8CA3; font-size: 0.84rem; font-weight: 500; max-width: 170px;"><div style="background: rgba(255,255,255,0.04); border: 1px solid #26262F; border-radius: 6px; padding: 4px 10px; display: inline-block; color: #E2E8F0; line-height: 1.3;">{target_role}</div></td><td style="padding: 12px 14px; text-align: center; vertical-align: middle;">{dec_chip}</td><td style="padding: 12px 14px; text-align: center; vertical-align: middle;">{ring}</td><td style="padding: 12px 14px; text-align: center; vertical-align: middle;">{flag_chip}</td><td style="padding: 12px 14px; color: #8E8CA3; font-size: 0.84rem; max-width: 220px; line-height: 1.4;">{strengths}</td><td style="padding: 12px 14px; color: #8E8CA3; font-size: 0.84rem; max-width: 220px; line-height: 1.4;">{gaps}</td><td style="padding: 12px 14px; color: #8E8CA3; font-size: 0.84rem; max-width: 280px; line-height: 1.4;">{rationale}</td></tr>"""
 
-    table_html = f"""<div style="overflow-x: auto; background: #14141C; border: 1px solid #26262F; border-radius: 12px; margin-bottom: 16px;"><table style="width: 100%; border-collapse: collapse; text-align: left; font-family: 'Inter', sans-serif;"><thead><tr style="border-bottom: 1px solid #26262F; background: rgba(255, 255, 255, 0.02);"><th style="padding: 12px 14px; font-family: 'Instrument Sans', sans-serif; font-size: 0.82rem; color: #8E8CA3; font-weight: 600;">Candidate & Resume</th><th style="padding: 12px 14px; font-family: 'Instrument Sans', sans-serif; font-size: 0.82rem; color: #8E8CA3; font-weight: 600; text-align: center;">Decision</th><th style="padding: 12px 14px; font-family: 'Instrument Sans', sans-serif; font-size: 0.82rem; color: #8E8CA3; font-weight: 600; text-align: center;">Score Ring</th><th style="padding: 12px 14px; font-family: 'Instrument Sans', sans-serif; font-size: 0.82rem; color: #8E8CA3; font-weight: 600; text-align: center;">Flags</th><th style="padding: 12px 14px; font-family: 'Instrument Sans', sans-serif; font-size: 0.82rem; color: #8E8CA3; font-weight: 600;">Key Strengths</th><th style="padding: 12px 14px; font-family: 'Instrument Sans', sans-serif; font-size: 0.82rem; color: #8E8CA3; font-weight: 600;">Qualification Gaps</th><th style="padding: 12px 14px; font-family: 'Instrument Sans', sans-serif; font-size: 0.82rem; color: #8E8CA3; font-weight: 600;">Recruiter Rationale</th></tr></thead><tbody>{rows_html}</tbody></table></div>"""
+    table_html = f"""<div style="overflow-x: auto; background: #14141C; border: 1px solid #26262F; border-radius: 12px; margin-bottom: 16px;"><table style="width: 100%; border-collapse: collapse; text-align: left; font-family: 'Inter', sans-serif;"><thead><tr style="border-bottom: 1px solid #26262F; background: rgba(255, 255, 255, 0.02);"><th style="padding: 12px 14px; font-family: 'Instrument Sans', sans-serif; font-size: 0.82rem; color: #8E8CA3; font-weight: 600;">Candidate & Resume</th><th style="padding: 12px 14px; font-family: 'Instrument Sans', sans-serif; font-size: 0.82rem; color: #8E8CA3; font-weight: 600;">Assessed Role</th><th style="padding: 12px 14px; font-family: 'Instrument Sans', sans-serif; font-size: 0.82rem; color: #8E8CA3; font-weight: 600; text-align: center;">Decision</th><th style="padding: 12px 14px; font-family: 'Instrument Sans', sans-serif; font-size: 0.82rem; color: #8E8CA3; font-weight: 600; text-align: center;">Score Ring</th><th style="padding: 12px 14px; font-family: 'Instrument Sans', sans-serif; font-size: 0.82rem; color: #8E8CA3; font-weight: 600; text-align: center;">Flags</th><th style="padding: 12px 14px; font-family: 'Instrument Sans', sans-serif; font-size: 0.82rem; color: #8E8CA3; font-weight: 600;">Key Strengths</th><th style="padding: 12px 14px; font-family: 'Instrument Sans', sans-serif; font-size: 0.82rem; color: #8E8CA3; font-weight: 600;">Qualification Gaps</th><th style="padding: 12px 14px; font-family: 'Instrument Sans', sans-serif; font-size: 0.82rem; color: #8E8CA3; font-weight: 600;">Recruiter Rationale</th></tr></thead><tbody>{rows_html}</tbody></table></div>"""
     return clean_html(table_html)

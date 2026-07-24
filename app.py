@@ -537,6 +537,9 @@ if selected_screen == "Run Shortlisting Pipeline":
         st.markdown("### Screening Results & Export Actions")
 
         data_dicts = [res.model_dump() for res in results]
+        active_role_title = st.session_state.get("latest_jd_title", "Target Role")
+        for d in data_dicts:
+            d["target_role"] = active_role_title
         df = pd.DataFrame(data_dicts)
 
         kpi1, kpi2, kpi3, kpi4 = st.columns(4)
@@ -692,6 +695,9 @@ elif selected_screen == "Shortlist Hub & Scheduler":
         role_titles = ["All Roles"] + [r["jd_title"] for r in roles_summary if r["jd_title"]]
         sel_role = st.selectbox("Select Job Description / Target Role", list(dict.fromkeys(role_titles)))
         shortlisted_cands = get_shortlisted_candidates_by_role(sel_role)
+        for c in shortlisted_cands:
+            if "target_role" not in c or not c["target_role"]:
+                c["target_role"] = c.get("jd_title") or sel_role
 
         m1, m2, m3, m4 = st.columns(4)
         m1.metric("Shortlisted Candidates", len(shortlisted_cands))

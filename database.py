@@ -211,10 +211,17 @@ def get_all_runs() -> List[Dict[str, Any]]:
         return [dict(r) for r in rows]
 
 def get_results_by_run(run_id: str) -> List[Dict[str, Any]]:
-    """Fetches evaluation results for a specific run."""
+    """Fetches evaluation results for a specific run along with target JD role title."""
     init_db()
     with get_connection() as conn:
-        rows = conn.cursor().execute("SELECT * FROM results WHERE run_id = ? ORDER BY score_0_100 DESC", (run_id,)).fetchall()
+        query = """
+            SELECT res.*, r.jd_title, r.jd_title as target_role
+            FROM results res
+            LEFT JOIN runs r ON res.run_id = r.run_id
+            WHERE res.run_id = ?
+            ORDER BY res.score_0_100 DESC
+        """
+        rows = conn.cursor().execute(query, (run_id,)).fetchall()
         return [dict(r) for r in rows]
 
 def get_resumes_by_run(run_id: str) -> List[Dict[str, Any]]:
