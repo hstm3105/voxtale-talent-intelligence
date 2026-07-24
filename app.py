@@ -17,7 +17,7 @@ import streamlit as st
 
 from models import ResumeDocument, EvaluationResult
 from pipeline.ingestion import load_job_description, load_single_file
-from pipeline.security import scan_heuristic_prompt_injection
+from pipeline.security import scan_security_prompt_injection, scan_heuristic_prompt_injection
 from pipeline.jd_extractor import extract_jd_requirements, validate_gemini_api_key, JDExtractionError
 from pipeline.resume_extractor import extract_resume_profile
 from pipeline.duplicate_detector import detect_duplicates
@@ -567,10 +567,10 @@ if selected_screen == "Run Shortlisting Pipeline":
                     save_log(run_id, "STAGE_1_INGESTION", f"Loaded {len(temp_resume_docs)} files cleanly", "INFO")
                     progress_bar.progress(15, text="Stage 1/8: Ingestion Complete")
 
-                    status_box.write("Stage 2: Untrusted Input Security Scan — Scanning for prompt injections...")
+                    status_box.write("Stage 2: Security Scan — Scanning for prompt injections (Heuristic + LLM Semantic)...")
                     security_scans = []
                     for doc in temp_resume_docs:
-                        is_inj, reason = scan_heuristic_prompt_injection(doc.raw_text)
+                        is_inj, reason = scan_security_prompt_injection(doc.raw_text)
                         security_scans.append((is_inj, reason))
                         if is_inj:
                             status_box.write(f"Security Alert on `{doc.filename}`: {reason}")

@@ -8,7 +8,7 @@ from concurrent.futures import ThreadPoolExecutor
 
 from models import EvaluationResult, ResumeProfile, FitAssessment
 from pipeline.ingestion import load_job_description, load_resumes_from_directory
-from pipeline.security import scan_heuristic_prompt_injection
+from pipeline.security import scan_security_prompt_injection
 from pipeline.jd_extractor import extract_jd_requirements, get_clean_api_key, JDExtractionError
 from pipeline.resume_extractor import extract_resume_profile
 from pipeline.duplicate_detector import detect_duplicates
@@ -40,11 +40,10 @@ def run_pipeline(jd_path: str, resumes_dir: str, output_csv_path: str) -> List[E
         logger.warning("No resume files found in specified directory.")
         return []
 
-    # Stage 2: Security scanning (Heuristic scan with Unicode normalization)
-    security_scans = []
-    for doc in resume_docs:
-        is_inj, reason = scan_heuristic_prompt_injection(doc.raw_text)
-        security_scans.append((is_inj, reason))
+    # Stage 2: Security scanning (Two-layer: Heuristic + LLM semantic scanner)
+    logger.info(f"Scanning {len(resume_docs)} candidate documents for prompt injection (Heuristic + LLM)...")
+    with ThreadPoolExecutor(max_workers=min(5, max(1, len(resume_docs)))) as executor:
+        security_scans = list(executor.map(lambda d: scan_security_prompt_injection(d.raw_text), resume_docs))
 
     # Stage 3: JD Requirement Extraction
     jd_requirements = extract_jd_requirements(jd_raw_text)
