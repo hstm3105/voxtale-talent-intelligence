@@ -1,0 +1,26 @@
+MEERA IYER
+meera.iyer.growth@gmail.com | +91 98765 43210 | Bengaluru, India
+
+SUMMARY
+Growth analyst with 5 years of experience in consumer subscription products. Led
+30+ A/B tests on onboarding and pricing surfaces, built LTV models used in board
+reporting, and partnered directly with Product and Marketing leadership.
+
+EXPERIENCE
+Senior Growth Analyst, StreamLoop (OTT subscription platform) — 2022-Present
+- Designed and ran 18 A/B tests on onboarding flow, improving D7 retention by 9%
+- Built a cohort-based LTV model in SQL + Python, now used quarterly for
+  marketing spend allocation decisions
+- Partnered with Data Science to diagnose a D30 retention drop, tracing it to a
+  recommendation algorithm regression; presented findings to the Head of Growth
+
+Growth Analyst, PlayPass (mobile gaming) — 2020-2022
+- Owned pricing experiments across three markets, using GrowthBook
+- Built retention cohort dashboards in Looker, used weekly by leadership
+
+EDUCATION
+B.Tech, Computer Science, BITS Pilani — 2020
+
+SKILLS
+SQL (advanced), Python (pandas, statsmodels), A/B testing, cohort analysis, LTV
+modeling, Looker, GrowthBook, Excel

@@ -1,0 +1,26 @@
+SANJANA MEHTA
+sanjana.mehta.biz@gmail.com | +91 99887 76655 | Mumbai, India
+
+SUMMARY
+Business analyst with 4 years of experience in e-commerce operations and
+dashboarding. Strong SQL, limited formal experimentation background.
+
+EXPERIENCE
+Business Analyst, UrbanCart (e-commerce) — 2021-Present
+- Built weekly SQL-based reporting for category performance and customer
+  cohorts (repeat purchase rate, not formal LTV modeling)
+- Supported the Marketing team by pulling campaign performance data; did not
+  personally design or run A/B tests, but interpreted results shared by the
+  Data Science team
+- Created Tableau dashboards used by regional sales leads
+
+Operations Analyst, Flipkart (contract) — 2019-2021
+- Reconciled seller payout data, flagged anomalies
+- Ad hoc SQL queries for operations leadership
+
+EDUCATION
+B.Com, University of Mumbai — 2019
+Certificate in Data Analytics, Coursera — 2021
+
+SKILLS
+SQL (strong), Excel, Tableau, basic Python (pandas), stakeholder communication

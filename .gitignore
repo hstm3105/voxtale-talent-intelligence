@@ -1,0 +1,25 @@
+# Virtual Environment
+venv/
+.venv/
+env/
+
+# Environment variables & Sensitive Credentials
+.env
+.env.local
+google_credentials.json
+
+# SQLite Database
+*.db
+
+# Python Cache
+__pycache__/
+*.pyc
+*.pyo
+
+# OS Files
+.DS_Store
+.vscode/
+.idea/
+
+# Streamlit Local Secrets
+.streamlit/secrets.toml

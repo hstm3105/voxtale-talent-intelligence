@@ -1,0 +1,24 @@
+Job Title: Senior Growth & Retention Analyst
+Department: Growth Marketing
+Seniority: Senior / Lead
+
+Role Summary:
+We are seeking a data-driven Senior Growth & Retention Analyst to lead user lifecycle analytics, funnel optimization, cohort retention analysis, and churn reduction strategies. You will work closely with marketing, product, and data engineering teams to turn user behavior data into actionable growth initiatives.
+
+Key Responsibilities:
+- Build and maintain predictive retention and churn forecasting models using SQL, Python, and BI dashboards (Tableau/Looker).
+- Design, execute, and evaluate A/B experiments and multivariate tests across onboarding and lifecycle messaging campaigns.
+- Analyze user behavior cohorts, activation metrics, and subscription renewal patterns to identify growth bottlenecks.
+- Collaborate with product managers to implement product-led growth (PLG) mechanics and personalized user journeys.
+
+Must-Have Requirements:
+- 4+ years of professional experience in growth analytics, product analytics, or retention modeling.
+- Advanced SQL proficiency (window functions, CTEs, query optimization) and Python data analysis (pandas, NumPy).
+- Hands-on experience with A/B testing methodologies and statistical experiment design.
+- Demonstrated experience analyzing retention cohorts and customer lifetime value (LTV).
+- Bachelor's degree in Quantitative field (Computer Science, Statistics, Economics, Mathematics) or equivalent practical experience.
+
+Nice-to-Have Qualifications:
+- Experience with customer data platforms (Segment, Mixpanel, Amplitude).
+- Predictive modeling experience (Scikit-Learn, logistic regression, survival analysis).
+- Background in SaaS or subscription business models.

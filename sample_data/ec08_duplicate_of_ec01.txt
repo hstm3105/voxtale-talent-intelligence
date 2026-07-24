@@ -1,0 +1,16 @@
+Meera Iyer
+Email: meera.iyer.growth@gmail.com Phone: 9876543210
+
+Experienced growth analyst (5 yrs) in subscription products.
+
+Work History:
+* StreamLoop - Senior Growth Analyst (2022 to present). Ran 18+ A/B tests on
+  onboarding, improved D7 retention 9%. Built LTV model in SQL/Python used
+  for marketing budget decisions.
+* PlayPass - Growth Analyst (2020-2022). Pricing experiments, GrowthBook,
+  Looker dashboards.
+
+Education: BITS Pilani, B.Tech CS, 2020
+
+Skills: SQL, Python, A/B testing, cohort analysis, LTV modeling, Looker,
+GrowthBook

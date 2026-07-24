@@ -1,0 +1,13 @@
+Job Title: Senior Data Platform Engineer
+Department: Infrastructure & Data Engineering
+Seniority: Senior / Staff
+
+Role Summary:
+We are looking for a Senior Data Platform Engineer to design, build, and maintain our real-time data pipelines, BigQuery warehouse architecture, and Apache Spark processing infrastructure.
+
+Key Requirements:
+- 5+ years of experience in Data Engineering or Data Platform architecture.
+- Strong mastery of Python, SQL, Apache Spark, and distributed systems.
+- Experience designing BigQuery / Snowflake data warehouses and Dataform / dbt orchestration.
+- Solid background in CI/CD, Kubernetes, and Cloud Infrastructure (GCP / AWS).
+- Bachelor's degree in Computer Science or Software Engineering.

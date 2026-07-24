@@ -1,0 +1,24 @@
+Alice Johnson
+Email: alice.johnson@email.com | Phone: (555) 234-5678 | San Francisco, CA
+
+PROFESSIONAL SUMMARY
+Senior Growth Analyst with 5 years of experience leading user retention, lifecycle marketing analytics, and churn reduction programs for high-growth SaaS companies. Expert in SQL, Python, cohort analysis, and statistical A/B testing.
+
+EXPERIENCE
+Senior Analytics Specialist | SaaSFlow Inc. | 2022 - Present
+- Spearheaded retention analysis across 500k monthly active users, building automated SQL and Python churn prediction models that reduced quarterly churn by 14%.
+- Designed and analyzed 30+ A/B tests on onboarding flows, driving an 18% improvement in 30-day user activation.
+- Built executive Looker dashboards tracking CAC, LTV, monthly retention cohorts, and feature engagement.
+
+Growth Data Analyst | MetricPulse | 2019 - 2022
+- Query-optimized complex SQL datasets in BigQuery and Snowflake to analyze user funnel drop-offs.
+- Utilized Amplitude and Segment to build behavioral segmentation models for lifecycle email triggers.
+- Performed statistical hypothesis testing and power calculations for marketing experiments.
+
+EDUCATION
+B.S. in Applied Statistics & Data Science | University of California, Berkeley (2019)
+
+SKILLS
+- Technical: SQL (Advanced), Python (Pandas, NumPy, Scikit-Learn), R, Git, Bash
+- Analytics: Cohort Analysis, Churn Modeling, LTV Modeling, Funnel Optimization, A/B Testing
+- Tools: Looker, Tableau, Amplitude, Mixpanel, Segment, Snowflake, BigQuery

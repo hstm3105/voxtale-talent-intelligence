@@ -1,0 +1,5 @@
+David Miller
+Email: david.miller@example.com | Phone: (555) 987-6543
+Senior Data Engineer with 6 years experience building scalable BigQuery warehouses, PySpark pipelines, and dbt models.
+Built streaming ingestion pipelines handling 50M events daily on GCP using Dataflow and Kafka.
+B.S. Computer Science, University of Texas at Austin.
