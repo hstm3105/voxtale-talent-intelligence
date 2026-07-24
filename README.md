@@ -24,11 +24,17 @@ Designed to analyze any Job Description (JD) and candidate resumes in batch acro
 3. **Multi-Format Ingestion Cascade**: Process TXT, PDF (`pdfplumber` layout-preserving parser + `pypdf` fallback), and DOCX (`python-docx`) files in batch with cross-format 4-gram Jaccard duplicate detection.
 4. **8-Stage Agentic Pipeline**: Autonomous JD requirement extraction, profile extraction, candidate isolation, fit evaluation, and deterministic guardrail rules engine.
 5. **Gemini Foundation Models**: Configurable support for **Gemini 3.5 Flash Lite** (Default), **Gemini 3 Flash**, and **Gemini 3.6 Flash**, with automatic 429 rate-limit exponential backoff retries.
-6. **Robust Security & Edge Case Defense**:
+6. **Robust Two-Layer Security & Edge Case Defense**:
    - **Sparse Resume Short-Circuit**: Fast-path detection of stub/empty resumes (< 40 words) flagging `insufficient_information`.
-   - **Disguised Prompt Injection Scanner**: Multi-pattern heuristic scanner detecting authority spoofing attacks (`NOTE FROM HIRING SYSTEM ADMINISTRATOR...`) and flagging `possible_prompt_injection`.
-7. **Clean Skill Token Deduplication**: Intelligent technical keyword extractor (`extract_skill_tokens`) preventing multi-sentence duplication between card body text and skill pill badges.
-8. **Exhaustive Error Safeguards & Streamlit Cloud Deployment Ready**:
+   - **Two-Layer Prompt Injection Scanner**:
+     - *Layer 1 (Fast-Pass Heuristic)*: Substring matching against `INJECTION_KEYWORDS` with Unicode NFKD normalization (zero latency/cost).
+     - *Layer 2 (Semantic LLM Classification)*: Dedicated structured Gemini call using `InjectionScanResult` schema to detect paraphrased instructions (*"disregard guidance given earlier"*) and indirect executive clearance claims.
+     - *Concurrent Execution*: Runs across candidate documents in Stage 2 via `ThreadPoolExecutor(max_workers=5)` to avoid batch latency.
+7. **Loud JD Extraction Safeguard (`JDExtractionError`)**:
+   - Eliminates silent fallbacks during Job Description requirement extraction.
+   - On network errors, rate limits, or schema validation failures, raises `JDExtractionError` and halts execution immediately before evaluating candidate resumes, preventing evaluation against meaningless requirement sets.
+8. **Clean Skill Token Deduplication**: Intelligent technical keyword extractor (`extract_skill_tokens`) preventing multi-sentence duplication between card body text and skill pill badges.
+9. **Exhaustive Error Safeguards & Streamlit Cloud Deployment Ready**:
    - Every database query in `database.py` wrapped in protective `try...except` catch loops.
    - Automated root directory `sys.path` resolution in `app.py` for seamless Streamlit Community Cloud deployment.
 
