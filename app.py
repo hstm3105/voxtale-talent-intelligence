@@ -997,40 +997,64 @@ elif selected_screen == "Shortlist Hub & Scheduler":
         # Sub-Tab 4: Side-by-Side Comparison Matrix
         with sub_tab4:
             st.markdown("### ⚔️ Candidate Side-by-Side Comparison Matrix")
-            sel_role_sub4 = st.selectbox("Select Target Role for Comparison", role_options, key="hub_role_sel_tab4")
+
+            def reset_cmp_candidates():
+                st.session_state["cmp_cand_a"] = None
+                st.session_state["cmp_cand_b"] = None
+
+            sel_role_sub4 = st.selectbox(
+                "Select Target Role for Comparison",
+                role_options,
+                key="hub_role_sel_tab4",
+                on_change=reset_cmp_candidates
+            )
             cands_tab4 = get_shortlisted_candidates_by_role(sel_role_sub4)
 
             if len(cands_tab4) < 2:
                 st.info(f"At least 2 candidates needed in role '{sel_role_sub4}' to perform side-by-side comparison.")
             else:
                 cmp_col1, cmp_col2 = st.columns(2)
-                cand_names = [f"{c['candidate_name']} ({c['score_0_100']} Fit Score)" for c in cands_tab4]
+                cand_dict = {f"{c['candidate_name']} ({c['score_0_100']} Fit Score)": c for c in cands_tab4}
+                cand_labels = list(cand_dict.keys())
 
                 with cmp_col1:
-                    idx1 = st.selectbox("Select Candidate A", range(len(cand_names)), index=0, format_func=lambda i: cand_names[i], key="cmp_cand_a")
-                    c1 = cands_tab4[idx1]
+                    sel_a = st.selectbox(
+                        "Select Candidate A",
+                        cand_labels,
+                        index=None,
+                        placeholder="Choose Candidate A...",
+                        key="cmp_cand_a"
+                    )
+                    c1 = cand_dict.get(sel_a) if sel_a else None
 
                 with cmp_col2:
-                    default_idx2 = 1 if len(cand_names) > 1 else 0
-                    idx2 = st.selectbox("Select Candidate B", range(len(cand_names)), index=default_idx2, format_func=lambda i: cand_names[i], key="cmp_cand_b")
-                    c2 = cands_tab4[idx2]
+                    sel_b = st.selectbox(
+                        "Select Candidate B",
+                        cand_labels,
+                        index=None,
+                        placeholder="Choose Candidate B...",
+                        key="cmp_cand_b"
+                    )
+                    c2 = cand_dict.get(sel_b) if sel_b else None
 
                 st.markdown("---")
 
                 col_a, col_b = st.columns(2)
-                for col, c in zip([col_a, col_b], [c1, c2]):
-                    with col:
-                        ring = render_confidence_ring(c["score_0_100"], c["decision"], size=52)
-                        dec_chip = render_chip(c["decision"], kind="decision")
-                        flag_chip = render_chip(c.get("flags", "none"), kind="flag")
-                        skill_tags = render_skill_tags(c.get("key_strengths", ""))
+                with col_a:
+                    if not c1:
+                        st.info("👈 Please select Candidate A from the dropdown above to view evaluation profile.")
+                    else:
+                        ring = render_confidence_ring(c1["score_0_100"], c1["decision"], size=52)
+                        dec_chip = render_chip(c1["decision"], kind="decision")
+                        flag_chip = render_chip(c1.get("flags", "none"), kind="flag")
+                        skill_tags = render_skill_tags(c1.get("key_strengths", ""))
 
                         st.markdown(f"""
                         <div style="background: var(--surface-bg); border: 1px solid var(--border-hairline); border-radius: 14px; padding: 20px; font-family: 'Inter', sans-serif;">
                           <div style="display: flex; align-items: center; justify-content: space-between; margin-bottom: 14px;">
                             <div>
-                              <h3 style="margin: 0; font-size: 1.2rem; color: var(--text-primary);">{c['candidate_name']}</h3>
-                              <div style="font-size: 0.8rem; color: var(--text-secondary); font-family: 'JetBrains Mono', monospace; margin-top: 3px;">File: {c['resume_filename']}</div>
+                              <h3 style="margin: 0; font-size: 1.2rem; color: var(--text-primary);">{c1['candidate_name']}</h3>
+                              <div style="font-size: 0.8rem; color: var(--text-secondary); font-family: 'JetBrains Mono', monospace; margin-top: 3px;">File: {c1['resume_filename']}</div>
                             </div>
                             {ring}
                           </div>
@@ -1039,24 +1063,69 @@ elif selected_screen == "Shortlist Hub & Scheduler":
                           </div>
                           <div style="margin-bottom: 12px;">
                             <div style="font-size: 0.78rem; font-weight: 600; text-transform: uppercase; color: var(--text-muted); margin-bottom: 4px;">Target Role</div>
-                            <div style="font-size: 0.9rem; font-weight: 500; color: var(--text-primary);">{c['jd_title']}</div>
+                            <div style="font-size: 0.9rem; font-weight: 500; color: var(--text-primary);">{c1['jd_title']}</div>
                           </div>
                           <div style="margin-bottom: 12px;">
                             <div style="font-size: 0.78rem; font-weight: 600; text-transform: uppercase; color: var(--text-muted); margin-bottom: 4px;">Contact Info</div>
-                            <div style="font-size: 0.84rem; color: var(--text-secondary);">Email: <code style="color: var(--brand-accent);">{c.get('email') or 'N/A'}</code> | Phone: <code style="color: var(--text-primary);">{c.get('phone') or 'N/A'}</code></div>
+                            <div style="font-size: 0.84rem; color: var(--text-secondary);">Email: <code style="color: var(--brand-accent);">{c1.get('email') or 'N/A'}</code> | Phone: <code style="color: var(--text-primary);">{c1.get('phone') or 'N/A'}</code></div>
                           </div>
                           <div style="margin-bottom: 12px;">
                             <div style="font-size: 0.78rem; font-weight: 600; text-transform: uppercase; color: var(--text-muted); margin-bottom: 4px;">Key Strengths & Extracted Skills</div>
-                            <div style="font-size: 0.84rem; color: var(--text-secondary); line-height: 1.4;">{c.get('key_strengths')}</div>
+                            <div style="font-size: 0.84rem; color: var(--text-secondary); line-height: 1.4;">{c1.get('key_strengths')}</div>
                             {skill_tags}
                           </div>
                           <div style="margin-bottom: 12px;">
                             <div style="font-size: 0.78rem; font-weight: 600; text-transform: uppercase; color: #FB7185; margin-bottom: 4px;">Qualification Gaps</div>
-                            <div style="font-size: 0.84rem; color: var(--text-secondary); line-height: 1.4;">{c.get('key_gaps')}</div>
+                            <div style="font-size: 0.84rem; color: var(--text-secondary); line-height: 1.4;">{c1.get('key_gaps')}</div>
                           </div>
                           <div>
                             <div style="font-size: 0.78rem; font-weight: 600; text-transform: uppercase; color: var(--text-muted); margin-bottom: 4px;">AI Rationale</div>
-                            <div style="font-size: 0.84rem; color: var(--text-secondary); line-height: 1.4; background: rgba(255,255,255,0.03); padding: 10px; border-radius: 8px;">{c.get('rationale')}</div>
+                            <div style="font-size: 0.84rem; color: var(--text-secondary); line-height: 1.4; background: rgba(255,255,255,0.03); padding: 10px; border-radius: 8px;">{c1.get('rationale')}</div>
+                          </div>
+                        </div>
+                        """, unsafe_allow_html=True)
+
+                with col_b:
+                    if not c2:
+                        st.info("👉 Please select Candidate B from the dropdown above to view evaluation profile.")
+                    else:
+                        ring = render_confidence_ring(c2["score_0_100"], c2["decision"], size=52)
+                        dec_chip = render_chip(c2["decision"], kind="decision")
+                        flag_chip = render_chip(c2.get("flags", "none"), kind="flag")
+                        skill_tags = render_skill_tags(c2.get("key_strengths", ""))
+
+                        st.markdown(f"""
+                        <div style="background: var(--surface-bg); border: 1px solid var(--border-hairline); border-radius: 14px; padding: 20px; font-family: 'Inter', sans-serif;">
+                          <div style="display: flex; align-items: center; justify-content: space-between; margin-bottom: 14px;">
+                            <div>
+                              <h3 style="margin: 0; font-size: 1.2rem; color: var(--text-primary);">{c2['candidate_name']}</h3>
+                              <div style="font-size: 0.8rem; color: var(--text-secondary); font-family: 'JetBrains Mono', monospace; margin-top: 3px;">File: {c2['resume_filename']}</div>
+                            </div>
+                            {ring}
+                          </div>
+                          <div style="display: flex; gap: 8px; margin-bottom: 14px;">
+                            {dec_chip} {flag_chip}
+                          </div>
+                          <div style="margin-bottom: 12px;">
+                            <div style="font-size: 0.78rem; font-weight: 600; text-transform: uppercase; color: var(--text-muted); margin-bottom: 4px;">Target Role</div>
+                            <div style="font-size: 0.9rem; font-weight: 500; color: var(--text-primary);">{c2['jd_title']}</div>
+                          </div>
+                          <div style="margin-bottom: 12px;">
+                            <div style="font-size: 0.78rem; font-weight: 600; text-transform: uppercase; color: var(--text-muted); margin-bottom: 4px;">Contact Info</div>
+                            <div style="font-size: 0.84rem; color: var(--text-secondary);">Email: <code style="color: var(--brand-accent);">{c2.get('email') or 'N/A'}</code> | Phone: <code style="color: var(--text-primary);">{c2.get('phone') or 'N/A'}</code></div>
+                          </div>
+                          <div style="margin-bottom: 12px;">
+                            <div style="font-size: 0.78rem; font-weight: 600; text-transform: uppercase; color: var(--text-muted); margin-bottom: 4px;">Key Strengths & Extracted Skills</div>
+                            <div style="font-size: 0.84rem; color: var(--text-secondary); line-height: 1.4;">{c2.get('key_strengths')}</div>
+                            {skill_tags}
+                          </div>
+                          <div style="margin-bottom: 12px;">
+                            <div style="font-size: 0.78rem; font-weight: 600; text-transform: uppercase; color: #FB7185; margin-bottom: 4px;">Qualification Gaps</div>
+                            <div style="font-size: 0.84rem; color: var(--text-secondary); line-height: 1.4;">{c2.get('key_gaps')}</div>
+                          </div>
+                          <div>
+                            <div style="font-size: 0.78rem; font-weight: 600; text-transform: uppercase; color: var(--text-muted); margin-bottom: 4px;">AI Rationale</div>
+                            <div style="font-size: 0.84rem; color: var(--text-secondary); line-height: 1.4; background: rgba(255,255,255,0.03); padding: 10px; border-radius: 8px;">{c2.get('rationale')}</div>
                           </div>
                         </div>
                         """, unsafe_allow_html=True)
