@@ -6,7 +6,7 @@ The VoxTale Agentic Resume Shortlister is designed as an explicit 8-stage pipeli
 
 ### Model Selection Rationale: Gemini 3.1 Flash-Lite
 
-Our default model choice for the production pipeline is **Gemini 3.1 Flash-Lite** (`gemini-3.1-flash-lite`). 
+Our default model choice for the production pipeline is **Gemini 3.5 Flash Lite** (`gemini-3.5-flash-lite`). 
 Resume screening is a high-volume batch processing task where throughput and cost efficiency are primary constraints. 
 To compensate for a Lite-tier model's shallower unconstrained reasoning depth versus larger models, our architecture enforces **Strict Structured JSON-Schema Output** (`response_schema` with Pydantic) at every extraction and evaluation stage. By constraining output tokens strictly to typed structural schemas and passing extracted fields into a deterministic Python rules engine, we achieve the latency and cost advantages of a Lite model while maintaining zero-hallucination, audit-ready decision quality.
 

@@ -1,18 +1,21 @@
-<<<<<<< HEAD
-# Agentic Resume-Shortlisting System
+# VoxTale - Agentic Resume Shortlister
 
-An enterprise-grade, multi-stage agentic resume-shortlisting platform powered by Python, Streamlit, SQLite, and Google's Gemini API. Designed to take any Job Description (JD) and a directory of candidate resumes in any format (TXT, PDF, DOCX), extracting structured requirements and providing an interactive UI with live pipeline stage visibility, database resume repository, and Google Sheets export capabilities.
+An enterprise-grade, multi-stage agentic resume-shortlisting platform powered by Python, Streamlit, SQLite, and Google's Gemini API (default model: **Gemini 3.5 Flash Lite**). Designed to take any Job Description (JD) and candidate resumes in multi-format batch (TXT, PDF, DOCX), extracting structured requirements and providing an interactive UI with live pipeline stage visibility, database resume repository, Google Sheets live sync, and SMTP email invitation capabilities.
 
 ---
 
 ## 🌟 Key Features
 
-1. **Interactive Web UI (Streamlit)**: Upload Job Description and multiple candidate resume files via drag-and-drop.
-2. **Multi-Format Processing**: Process TXT, PDF (`pdfplumber` + `pypdf`), and DOCX (`python-docx`) files in batch mode.
-3. **Live Pipeline Stage Visibility**: Real-time stage progress tracker ideal for live interview panel demonstrations.
-4. **Database Resume Repository (SQLite)**: Stores every pipeline run, raw resume document, extraction text, and evaluation result in a queryable SQLite database.
-5. **System Run Logs**: Detailed stage-by-stage execution logs maintained per run.
-6. **Google Sheets & CSV Export**: One-click results download and automated sync to Google Sheets.
+1. **Interactive Web UI (Streamlit)**: Upload Job Description and candidate resume files via drag-and-drop with real-time candidate search and multi-select filtering by decision & flags.
+2. **Multi-Format Ingestion**: Process TXT, PDF (`pdfplumber` + `pypdf`), and DOCX (`python-docx`) files in batch mode with multi-format duplicate detection.
+3. **8-Stage Agentic Pipeline**: Autonomous JD requirement extraction, profile extraction, candidate isolation, fit evaluation, and deterministic guardrail rules engine.
+4. **Gemini Foundation Models**: Support for **Gemini 3.5 Flash Lite** (Default), **Gemini 3 Flash**, and **Gemini 3.6 Flash**, configurable dynamically in top-right ⚙️ Settings.
+5. **Robust Security & Edge Case Defense**:
+   - **Sparse Resume Short-Circuit**: Fast-path detection of stub/empty resumes (< 35-40 words) flagging `insufficient_information`.
+   - **Disguised Prompt Injection Scanner**: Heuristic pattern detection catching authority spoofing attacks (`NOTE FROM HIRING SYSTEM ADMINISTRATOR...`) and flagging `possible_prompt_injection`.
+6. **Database Resume Repository (SQLite)**: Stores every pipeline run, raw resume document, extraction text, and evaluation result in a queryable SQLite database.
+7. **Google Sheets & SMTP Email Integration**: Automated live sync to Google Sheets and one-click dispatch of live interview email invitations.
+8. **Session Isolation & Cloud Deployment Ready**: Complete session state isolation for multi-user web apps with Streamlit Community Cloud Secrets support.
 
 ---
 
@@ -20,7 +23,7 @@ An enterprise-grade, multi-stage agentic resume-shortlisting platform powered by
 
 ### Setup Instructions
 
-1. Navigate to the project directory on Desktop:
+1. Clone or navigate to the project directory:
    ```bash
    cd ~/Desktop/resume_shortlister
    ```
@@ -40,24 +43,26 @@ An enterprise-grade, multi-stage agentic resume-shortlisting platform powered by
    ```bash
    export GEMINI_API_KEY="your-gemini-api-key-here"
    ```
-   *Note: You can also enter the API key directly in the Streamlit web app sidebar!*
+   *Note: You can also enter the API key directly in the Streamlit web app Settings modal, or configure it in Streamlit Cloud Secrets!*
 
 ---
 
 ## 💻 Running the Web Application (Interactive UI)
 
-To launch the interactive web app with live stage visibility:
+To launch the interactive web app:
 
 ```bash
 streamlit run app.py
 ```
 
-Open your browser at `http://localhost:8501`.
+Open your browser at **`http://localhost:8501`**.
 
-### App Layout & Capabilities:
-- **Tab 1: 🚀 Run Shortlister (Live Demo)**: Upload JD text/file and multiple resume files. Click "Start Shortlisting Pipeline" to watch live stage progress and inspect candidate cards.
-- **Tab 2: 📁 Resume Database Repository**: View past runs, stored resume binary details, and candidate score records.
-- **Tab 3: 📜 Run Execution Logs**: Inspect stage logs, security alerts, and run events.
+### App Screens:
+- **Screen 1: 🚀 Run Shortlisting Pipeline**: Upload JD text/file and candidate resumes. Click "Start Shortlisting Pipeline" to execute the 8-stage workflow.
+- **Screen 2: 📊 Shortlist Hub & Scheduler**: Search and filter shortlisted candidates, export CSV/Excel, sync to Google Sheets, and preview/send live interview email invitations.
+- **Screen 3: 📁 Resume Repository**: Inspect historical runs, raw resume documents, and full candidate score records.
+- **Screen 4: 🧠 Recruiter Feedback Loop**: Review recruiter corrections and approve validated few-shot examples for in-context learning.
+- **Screen 5: 📜 System Execution Logs**: Inspect stage-by-stage execution logs and security events.
 
 ---
 
@@ -73,7 +78,7 @@ python main.py --jd sample_data/sample_jd.txt --resumes sample_data/ --output ou
 
 ## 🧪 Running the Automated Evaluation Suite
 
-To execute the automated evaluation test suite against hand-crafted edge cases:
+To execute the automated evaluation test suite against 16 edge cases:
 
 1. Generate test data files:
    ```bash
@@ -93,14 +98,11 @@ The system outputs a CSV file conforming to the exact contract below:
 
 | Column | Description | Vocabulary / Constraints |
 | :--- | :--- | :--- |
-| `resume_filename` | Original filename of candidate resume | e.g. `resume_alice_johnson.txt` |
+| `resume_filename` | Original filename of candidate resume | e.g. `01_alice_johnson_shortlist.txt` |
 | `candidate_name` | Extracted full candidate name | e.g. `Alice Johnson` |
 | `decision` | Final shortlisting decision | `Shortlist` \| `Maybe` \| `Reject` \| `Needs Manual Review` |
 | `score_0_100` | Integer fit score | `0` to `100` |
 | `key_strengths` | 2-3 concrete, JD-specific strengths | Semicolon-delimited string |
-| `key_gaps` | 2-3 concrete, JD-specific gaps | Semicolon-delimited string |
-| `flags` | Categorical security / quality flag | `none` \| `unreadable_file` \| `insufficient_information` \| `possible_prompt_injection` \| `duplicate_submission` \| `overqualified` \| `other` |
-| `rationale` | Recruiter-facing explanation | 1 to 3 concise sentences |
-=======
-# voxtale-talent-intelligence
->>>>>>> 784c52be822799d5a761a296abb72505851fcfca
+| `key_gaps` | 2-3 concrete gaps or missing qualifications | Semicolon-delimited string |
+| `flags` | Security or data quality flags | `none` \| `overqualified` \| `duplicate_submission` \| `insufficient_information` \| `possible_prompt_injection` \| `other` |
+| `rationale` | Audit-ready summary explaining decision | Free-text string |

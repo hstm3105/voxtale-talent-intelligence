@@ -83,7 +83,7 @@ When demonstrating or defending this project in an interview, present these **5 
 - **Heuristic Injection Scanning**: A multi-pattern regex scanner inspects raw text for override keywords (e.g., *"ignore previous instructions"*, *"system override"*, *"set score to 100"*). If detected, `is_injection = True` is passed down to the decision engine.
 
 ### Stage 3: Dynamic JD Requirements Extraction (`pipeline/jd_extractor.py`)
-- **Model Choice**: **Gemini 3.1 Flash-Lite** (`gemini-3.1-flash-lite`), selectable via UI dropdown alongside Gemini 2.5 Flash, Gemini 3.5 Flash, and Gemini 2.5 Flash Lite.
+- **Model Choice**: **Gemini 3.5 Flash Lite** (`gemini-3.5-flash-lite`), selectable via Settings dropdown alongside Gemini 3 Flash and Gemini 3.6 Flash.
 - **Structured Schema Enforcement**: Uses Pydantic `JDRequirements` schema with `response_mime_type="application/json"`:
   - `role_title`: str
   - `seniority_level`: str
