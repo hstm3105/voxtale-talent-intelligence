@@ -9,8 +9,24 @@ from config import get_current_model_name, GEMINI_API_KEY
 from utils.logger import logger
 
 def get_clean_api_key() -> str:
-    """Gets and sanitizes the API key from config or environment."""
-    key = GEMINI_API_KEY or os.environ.get("GEMINI_API_KEY") or os.environ.get("GOOGLE_API_KEY") or ""
+    """Gets and sanitizes the API key from session state, config, environment, or Streamlit secrets."""
+    key = ""
+    try:
+        import streamlit as st
+        key = st.session_state.get("user_gemini_api_key", "")
+    except Exception:
+        pass
+
+    if not key:
+        key = GEMINI_API_KEY or os.environ.get("GEMINI_API_KEY") or os.environ.get("GOOGLE_API_KEY") or ""
+
+    if not key:
+        try:
+            import streamlit as st
+            key = st.secrets.get("GEMINI_API_KEY", "") or st.secrets.get("GOOGLE_API_KEY", "")
+        except Exception:
+            pass
+
     return key.strip().strip("'").strip('"')
 
 def get_genai_client() -> genai.Client:

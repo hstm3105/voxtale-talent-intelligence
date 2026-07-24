@@ -16,6 +16,12 @@ MODEL_MAPPING = {
 
 # Dynamic getter for active model name
 def get_current_model_name() -> str:
+    try:
+        import streamlit as st
+        if "user_model_name" in st.session_state and st.session_state["user_model_name"]:
+            return st.session_state["user_model_name"]
+    except Exception:
+        pass
     return os.environ.get("GEMINI_MODEL_NAME", "gemini-3.5-flash-lite")
 
 GEMINI_MODEL_NAME = get_current_model_name()

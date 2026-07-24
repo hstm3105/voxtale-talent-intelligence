@@ -241,24 +241,27 @@ def open_settings_modal():
     
     with tab_m1:
         st.markdown("#### Gemini Foundation Model Settings")
+        current_api_key = st.session_state.get("user_gemini_api_key") or os.environ.get("GEMINI_API_KEY", "")
         api_key_tab = st.text_input(
             "Gemini API Key",
             type="password",
-            value=os.environ.get("GEMINI_API_KEY", ""),
+            value=current_api_key,
             key="modal_api_key_in"
         )
         if api_key_tab:
+            st.session_state["user_gemini_api_key"] = api_key_tab.strip().strip("'").strip('"')
             os.environ["GEMINI_API_KEY"] = api_key_tab.strip().strip("'").strip('"')
 
         if st.button("Validate API Key Connection", key="modal_validate_key_btn", use_container_width=True):
-            is_valid, msg = validate_gemini_api_key(os.environ.get("GEMINI_API_KEY", ""))
+            active_key = st.session_state.get("user_gemini_api_key") or os.environ.get("GEMINI_API_KEY", "")
+            is_valid, msg = validate_gemini_api_key(active_key)
             if is_valid:
                 st.success(msg)
             else:
                 st.error(msg)
 
         model_options = list(MODEL_MAPPING.keys())
-        current_env_model = os.environ.get("GEMINI_MODEL_NAME", "gemini-3.5-flash-lite")
+        current_env_model = st.session_state.get("user_model_name") or os.environ.get("GEMINI_MODEL_NAME", "gemini-3.5-flash-lite")
         curr_index = 0
         for idx, (label, val) in enumerate(MODEL_MAPPING.items()):
             if val == current_env_model:
@@ -266,6 +269,7 @@ def open_settings_modal():
                 break
 
         sel_model = st.selectbox("Selected Foundation Model", model_options, index=curr_index, key="modal_model_sel")
+        st.session_state["user_model_name"] = MODEL_MAPPING[sel_model]
         os.environ["GEMINI_MODEL_NAME"] = MODEL_MAPPING[sel_model]
 
     with tab_m2:
@@ -349,7 +353,7 @@ st.sidebar.markdown(f"""
 # Component 4: Top-Right Model Status Pill + Main Header (Positioned in Normal Document Flow below Streamlit Header)
 h_col1, h_col2 = st.columns([3.1, 1.4], vertical_alignment="center")
 
-api_key_env = os.environ.get("GEMINI_API_KEY", "")
+api_key_env = st.session_state.get("user_gemini_api_key") or os.environ.get("GEMINI_API_KEY", "")
 status_dot_color = "#34D399" if api_key_env else "#FBBF24"
 status_label = "Connected" if api_key_env else "Pending Key"
 model_name = get_current_model_name()

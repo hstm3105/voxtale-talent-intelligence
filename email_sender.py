@@ -37,6 +37,14 @@ def send_results_email(
     recipient_email = sanitize_str(recipient_email or DEFAULT_RECIPIENT_EMAIL)
 
     if not sender_email or not sender_password:
+        try:
+            import streamlit as st
+            sender_email = sender_email or sanitize_str(st.secrets.get("SENDER_EMAIL", ""))
+            sender_password = sender_password or sanitize_str(st.secrets.get("SENDER_APP_PASSWORD", ""))
+        except Exception:
+            pass
+
+    if not sender_email or not sender_password:
         return {
             "success": False,
             "message": "SMTP Sender Credentials missing. Please enter your Sender Email & App Password in the sidebar expander under '✉️ Email Sender Settings'.",

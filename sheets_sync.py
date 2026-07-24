@@ -81,6 +81,23 @@ def export_to_google_sheets(
                     "url": None
                 }
 
+    # 3. Try Streamlit secrets
+    if not gc:
+        try:
+            import streamlit as st
+            sa_sec = st.secrets.get("GOOGLE_SERVICE_ACCOUNT_JSON", None)
+            if sa_sec:
+                if isinstance(sa_sec, str):
+                    sa_data = json.loads(sa_sec)
+                else:
+                    sa_data = dict(sa_sec)
+                gc = gspread.service_account_from_dict(sa_data, scopes=scopes)
+                service_account_email = sa_data.get("client_email")
+            if not target_id and st.secrets.get("TARGET_SHEET_URL"):
+                target_id = extract_spreadsheet_id(st.secrets.get("TARGET_SHEET_URL"))
+        except Exception:
+            pass
+
     if not gc:
         logger.warning("Google credentials not provided. Google Sheets sync requires Service Account JSON.")
         return {
