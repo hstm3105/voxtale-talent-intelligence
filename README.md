@@ -1,3 +1,4 @@
+<<<<<<< HEAD
 # Agentic Resume-Shortlisting System
 
 An enterprise-grade, multi-stage agentic resume-shortlisting platform powered by Python, Streamlit, SQLite, and Google's Gemini API. Designed to take any Job Description (JD) and a directory of candidate resumes in any format (TXT, PDF, DOCX), extracting structured requirements and providing an interactive UI with live pipeline stage visibility, database resume repository, and Google Sheets export capabilities.
@@ -100,3 +101,6 @@ The system outputs a CSV file conforming to the exact contract below:
 | `key_gaps` | 2-3 concrete, JD-specific gaps | Semicolon-delimited string |
 | `flags` | Categorical security / quality flag | `none` \| `unreadable_file` \| `insufficient_information` \| `possible_prompt_injection` \| `duplicate_submission` \| `overqualified` \| `other` |
 | `rationale` | Recruiter-facing explanation | 1 to 3 concise sentences |
+=======
+# voxtale-talent-intelligence
+>>>>>>> 784c52be822799d5a761a296abb72505851fcfca
