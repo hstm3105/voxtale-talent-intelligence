@@ -25,7 +25,7 @@ from database import (
 from sheets_sync import export_to_google_sheets, generate_excel_for_sheets
 from email_sender import send_results_email, DEFAULT_RECIPIENT_EMAIL, sanitize_str
 from config import CSV_HEADER, MODEL_MAPPING, get_current_model_name
-from pipeline.ui_components import render_confidence_ring, render_chip, build_candidate_html_table
+from pipeline.ui_components import render_confidence_ring, render_chip, build_candidate_html_table, render_kpi_card, render_skill_tags
 
 # Page Configuration - Executive Sidebar Enabled Layout
 st.set_page_config(
@@ -99,40 +99,54 @@ CUSTOM_CSS = """
         font-family: 'JetBrains Mono', monospace !important;
     }
 
-    /* Sidebar Navigation List */
+    /* Sidebar Navigation List & Feature Buttons */
     section[data-testid="stSidebar"] {
         background-color: var(--canvas-bg) !important;
         border-right: 1px solid var(--border-hairline) !important;
         padding-top: 1.2rem;
-        width: 17rem !important;
-        min-width: 17rem !important;
+        width: 17.5rem !important;
+        min-width: 17.5rem !important;
     }
 
-    section[data-testid="stSidebar"] .stRadio div[role="radiogroup"] > label {
-        background: transparent;
-        border-radius: 8px;
-        padding: 7px 8px;
-        margin-bottom: 4px;
-        color: var(--text-secondary);
-        font-family: 'Inter', sans-serif;
-        font-size: 0.81rem;
-        font-weight: 500;
-        letter-spacing: -0.01em;
-        transition: all 0.15s ease;
-        border: 1px solid transparent;
+    section[data-testid="stSidebar"] div.stButton > button[kind="secondary"] {
+        background: transparent !important;
+        border: 1px solid transparent !important;
+        border-left: 3px solid transparent !important;
+        border-radius: 8px !important;
+        color: #8E8CA3 !important;
+        font-family: 'Inter', sans-serif !important;
+        font-size: 0.81rem !important;
+        font-weight: 500 !important;
+        text-align: left !important;
+        justify-content: flex-start !important;
+        padding: 7px 10px !important;
+        margin-bottom: 3px !important;
         white-space: nowrap !important;
+        transition: all 0.18s cubic-bezier(0.4, 0, 0.2, 1) !important;
     }
 
-    section[data-testid="stSidebar"] .stRadio div[role="radiogroup"] > label:hover {
-        background: var(--raised-bg) !important;
-        color: var(--text-primary) !important;
+    section[data-testid="stSidebar"] div.stButton > button[kind="secondary"]:hover {
+        background: rgba(255, 255, 255, 0.04) !important;
+        color: #F2F1F7 !important;
+        border-left: 3px solid rgba(110, 98, 245, 0.5) !important;
+        transform: translateX(2px) !important;
     }
 
-    section[data-testid="stSidebar"] .stRadio div[role="radiogroup"] > label[aria-checked="true"] {
-        background: rgba(110, 98, 245, 0.12) !important;
-        color: var(--brand-accent) !important;
-        border-left: 3px solid var(--brand-accent) !important;
+    section[data-testid="stSidebar"] div.stButton > button[kind="primary"] {
+        background: rgba(110, 98, 245, 0.14) !important;
+        border: 1px solid rgba(110, 98, 245, 0.25) !important;
+        border-left: 3px solid #6E62F5 !important;
+        border-radius: 8px !important;
+        color: #F2F1F7 !important;
+        font-family: 'Inter', sans-serif !important;
+        font-size: 0.81rem !important;
         font-weight: 600 !important;
+        text-align: left !important;
+        justify-content: flex-start !important;
+        padding: 7px 10px !important;
+        margin-bottom: 3px !important;
+        white-space: nowrap !important;
+        box-shadow: 0 2px 8px rgba(110, 98, 245, 0.15) !important;
     }
 
     /* Native Cards (Upload Dropzones & Panels) */
@@ -228,6 +242,7 @@ CUSTOM_CSS = """
 """
 
 st.markdown(CUSTOM_CSS, unsafe_allow_html=True)
+st.session_state["app_theme"] = "dark"
 
 # Initialize Database Schema
 init_db()
@@ -317,30 +332,102 @@ def open_settings_modal():
         if st.button("Save & Close Settings", type="primary", use_container_width=True):
             st.rerun()
 
-# Component 1: Sidebar Navigation & Compact Stat Footer
-st.sidebar.markdown('<div style="font-size: 0.72rem; font-weight: 600; text-transform: uppercase; letter-spacing: 0.08em; color: #5C5A6E; margin-bottom: 12px; font-family: \'Inter\', sans-serif;">MENU</div>', unsafe_allow_html=True)
+# Initialize Navigation Session State
+if "active_nav_screen" not in st.session_state:
+    st.session_state["active_nav_screen"] = "Run Shortlisting Pipeline"
 
-selected_screen = st.sidebar.radio(
-    "Navigation Menu",
-    [
-        "Run Shortlisting Pipeline",
-        "Shortlist Hub & Scheduler",
-        "Resume Repository",
-        "Recruiter Feedback Loop",
-        "System Execution Logs"
-    ],
-    key="nav_screen_radio",
-    label_visibility="collapsed"
-)
-
-# Compact Two-Line Stat Footer at Bottom of Sidebar
+# Fetch Live System Metrics for Sidebar Badges
 past_runs = get_all_runs()
+shortlisted_cands_all = get_shortlisted_candidates_by_role("All Roles")
+pending_feedback = get_pending_feedback()
 feedback_count = len(get_all_feedback())
 
+# Component 1: Feature-Oriented Executive Sidebar Navigation
+st.sidebar.markdown("""
+<div style="padding: 4px 0 10px 0;">
+    <div style="font-size: 0.68rem; font-weight: 700; text-transform: uppercase; letter-spacing: 0.09em; color: #5C5A6E; font-family: 'Inter', sans-serif; margin-bottom: 8px;">
+        CORE WORKFLOWS
+    </div>
+</div>
+""", unsafe_allow_html=True)
+
+# Feature 1: Run Shortlisting Pipeline
+is_s1_active = st.session_state["active_nav_screen"] == "Run Shortlisting Pipeline"
+s1_label = "🚀 Run Shortlisting Pipeline"
+if st.sidebar.button(
+    s1_label,
+    key="nav_btn_s1",
+    use_container_width=True,
+    type="primary" if is_s1_active else "secondary"
+):
+    st.session_state["active_nav_screen"] = "Run Shortlisting Pipeline"
+    st.rerun()
+
+# Feature 2: Shortlist Hub & Scheduler
+is_s2_active = st.session_state["active_nav_screen"] == "Shortlist Hub & Scheduler"
+s2_count = len(shortlisted_cands_all)
+s2_label = f"📊 Shortlist Hub & Scheduler ({s2_count})" if s2_count > 0 else "📊 Shortlist Hub & Scheduler"
+if st.sidebar.button(
+    s2_label,
+    key="nav_btn_s2",
+    use_container_width=True,
+    type="primary" if is_s2_active else "secondary"
+):
+    st.session_state["active_nav_screen"] = "Shortlist Hub & Scheduler"
+    st.rerun()
+
+st.sidebar.markdown("""
+<div style="padding: 16px 0 10px 0;">
+    <div style="font-size: 0.68rem; font-weight: 700; text-transform: uppercase; letter-spacing: 0.09em; color: #5C5A6E; font-family: 'Inter', sans-serif; margin-bottom: 8px;">
+        INTELLIGENCE & MEMORY
+    </div>
+</div>
+""", unsafe_allow_html=True)
+
+# Feature 3: Resume Repository
+is_s3_active = st.session_state["active_nav_screen"] == "Resume Repository"
+s3_count = len(past_runs)
+s3_label = f"📁 Resume Repository ({s3_count})" if s3_count > 0 else "📁 Resume Repository"
+if st.sidebar.button(
+    s3_label,
+    key="nav_btn_s3",
+    use_container_width=True,
+    type="primary" if is_s3_active else "secondary"
+):
+    st.session_state["active_nav_screen"] = "Resume Repository"
+    st.rerun()
+
+# Feature 4: Recruiter Feedback Loop
+is_s4_active = st.session_state["active_nav_screen"] == "Recruiter Feedback Loop"
+s4_pending = len(pending_feedback)
+s4_label = f"🧠 Recruiter Feedback ({s4_pending} new)" if s4_pending > 0 else "🧠 Recruiter Feedback Loop"
+if st.sidebar.button(
+    s4_label,
+    key="nav_btn_s4",
+    use_container_width=True,
+    type="primary" if is_s4_active else "secondary"
+):
+    st.session_state["active_nav_screen"] = "Recruiter Feedback Loop"
+    st.rerun()
+
+# Feature 5: System Execution Logs
+is_s5_active = st.session_state["active_nav_screen"] == "System Execution Logs"
+if st.sidebar.button(
+    "📜 System Execution Logs",
+    key="nav_btn_s5",
+    use_container_width=True,
+    type="primary" if is_s5_active else "secondary"
+):
+    st.session_state["active_nav_screen"] = "System Execution Logs"
+    st.rerun()
+
+selected_screen = st.session_state["active_nav_screen"]
+
+# Compact Two-Line Stat Footer at Bottom of Sidebar
 st.sidebar.markdown(f"""
-<div style="margin-top: 36px; padding-top: 14px; border-top: 1px solid #26262F; font-family: 'Inter', sans-serif;">
+<div style="margin-top: 28px; padding-top: 14px; border-top: 1px solid #26262F; font-family: 'Inter', sans-serif;">
   <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 8px;">
-    <span style="font-size: 0.78rem; color: #8E8CA3;">Total Executed Runs</span>
+    <span style="font-size: 0.78rem; color: #8E8CA3;">Total Pipeline Runs</span>
     <span style="font-size: 0.82rem; font-weight: 600; color: #F2F1F7; font-family: 'JetBrains Mono', monospace;">{len(past_runs)}</span>
   </div>
   <div style="display: flex; justify-content: space-between; align-items: center;">
@@ -360,9 +447,14 @@ model_name = get_current_model_name()
 
 with h_col1:
     st.markdown("""
-    <div style="padding: 0 0 2px 0;">
-        <h1 style="margin: 0; color: #F2F1F7;">VoxTale Talent Intelligence</h1>
-        <p style="margin: 3px 0 0 0; font-size: 0.92rem; color: #8E8CA3;">Multi-Stage Agentic Resume Screening</p>
+    <div style="display: flex; align-items: center; gap: 14px; padding: 2px 0;">
+        <div style="width: 40px; height: 40px; border-radius: 10px; background: linear-gradient(135deg, #6E62F5 0%, #34D399 100%); display: flex; align-items: center; justify-content: center; box-shadow: 0 4px 14px rgba(110, 98, 245, 0.35); font-size: 20px;">
+            🤖
+        </div>
+        <div>
+            <h1 style="margin: 0; color: #F2F1F7; font-family: 'Instrument Sans', sans-serif; font-weight: 700; font-size: 1.6rem; letter-spacing: -0.02em;">VoxTale Talent Intelligence</h1>
+            <p style="margin: 2px 0 0 0; font-size: 0.86rem; color: #8E8CA3; font-family: 'Inter', sans-serif;">Autonomous Multi-Stage Candidate Screening & Decision Pipeline</p>
+        </div>
     </div>
     """, unsafe_allow_html=True)
 
@@ -548,10 +640,14 @@ if selected_screen == "Run Shortlisting Pipeline":
         c_review = sum(1 for r in results if r.decision == "Needs Manual Review")
         c_reject = sum(1 for r in results if r.decision == "Reject")
 
-        kpi1.metric("Shortlisted (Top Match)", c_short)
-        kpi2.metric("Maybe (Borderline)", c_maybe)
-        kpi3.metric("Needs Manual Review", c_review)
-        kpi4.metric("Rejected", c_reject)
+        with kpi1:
+            st.markdown(render_kpi_card("Shortlisted Matches", c_short, "Top Fit Candidates", "#34D399"), unsafe_allow_html=True)
+        with kpi2:
+            st.markdown(render_kpi_card("Maybe Matches", c_maybe, "Borderline Qualifications", "#FBBF24"), unsafe_allow_html=True)
+        with kpi3:
+            st.markdown(render_kpi_card("Manual Review", c_review, "Security / Data Flags", "#A78BFA"), unsafe_allow_html=True)
+        with kpi4:
+            st.markdown(render_kpi_card("Rejected", c_reject, "Does Not Meet Criteria", "#FB7185"), unsafe_allow_html=True)
 
         f_col1, f_col2, f_col3 = st.columns([2, 1, 1])
         with f_col1:
@@ -693,36 +789,48 @@ elif selected_screen == "Shortlist Hub & Scheduler":
         st.info("No candidate shortlists stored in repository yet. Run a shortlisting pipeline in Screen 1 first!")
     else:
         role_titles = ["All Roles"] + [r["jd_title"] for r in roles_summary if r["jd_title"]]
-        sel_role = st.selectbox("Select Job Description / Target Role", list(dict.fromkeys(role_titles)))
-        shortlisted_cands = get_shortlisted_candidates_by_role(sel_role)
-        for c in shortlisted_cands:
-            if "target_role" not in c or not c["target_role"]:
-                c["target_role"] = c.get("jd_title") or sel_role
+        role_options = list(dict.fromkeys(role_titles))
+        all_shortlisted_cands = get_shortlisted_candidates_by_role("All Roles")
 
         m1, m2, m3, m4 = st.columns(4)
-        m1.metric("Shortlisted Candidates", len(shortlisted_cands))
-        top_fit_count = sum(1 for c in shortlisted_cands if c["score_0_100"] >= 80)
-        m2.metric("High Fit (Score ≥ 80)", top_fit_count)
-        avg_score = (sum(c["score_0_100"] for c in shortlisted_cands) / len(shortlisted_cands)) if shortlisted_cands else 0
-        m3.metric("Average Fit Score", f"{avg_score:.1f} / 100")
-        with_contact = sum(1 for c in shortlisted_cands if c.get("email") and c.get("email") != "N/A")
-        m4.metric("Contact Info Extracted", f"{with_contact}/{len(shortlisted_cands)}")
+        top_fit_count = sum(1 for c in all_shortlisted_cands if c["score_0_100"] >= 80)
+        avg_score = (sum(c["score_0_100"] for c in all_shortlisted_cands) / len(all_shortlisted_cands)) if all_shortlisted_cands else 0
+        with_contact = sum(1 for c in all_shortlisted_cands if c.get("email") and c.get("email") != "N/A")
+
+        with m1:
+            st.markdown(render_kpi_card("Shortlisted Candidates", len(all_shortlisted_cands), "Total candidates in hub", "#6E62F5"), unsafe_allow_html=True)
+        with m2:
+            st.markdown(render_kpi_card("High Fit Match", top_fit_count, "Candidates with Score ≥ 80", "#34D399"), unsafe_allow_html=True)
+        with m3:
+            st.markdown(render_kpi_card("Average Fit Score", f"{avg_score:.1f} / 100", "Mean candidate score", "#FBBF24"), unsafe_allow_html=True)
+        with m4:
+            st.markdown(render_kpi_card("Contact Info Extracted", f"{with_contact}/{len(all_shortlisted_cands)}", "Email & phone identified", "#A78BFA"), unsafe_allow_html=True)
 
         st.divider()
 
-        sub_tab1, sub_tab2, sub_tab3 = st.tabs([
+        sub_tab1, sub_tab2, sub_tab3, sub_tab4 = st.tabs([
             "Master Candidate List",
             "Schedule an Interview",
-            "Candidate Dossiers"
+            "Candidate Dossiers",
+            "⚔️ Side-by-Side Comparison"
         ])
 
+        # Sub-Tab 1: Master Candidate List
         with sub_tab1:
+            h_f0, h_f1, h_f2, h_f3 = st.columns([1.4, 1.8, 1, 1])
+            with h_f0:
+                sel_role_sub1 = st.selectbox("Select Target Role / JD", role_options, key="hub_role_sel_tab1")
+
+            shortlisted_cands = get_shortlisted_candidates_by_role(sel_role_sub1)
+            for c in shortlisted_cands:
+                if "target_role" not in c or not c["target_role"]:
+                    c["target_role"] = c.get("jd_title") or sel_role_sub1
+
             if not shortlisted_cands:
-                st.warning(f"No shortlisted candidates found for role '{sel_role}'.")
+                st.warning(f"No shortlisted candidates found for role '{sel_role_sub1}'.")
             else:
-                h_f1, h_f2, h_f3 = st.columns([2, 1, 1])
                 with h_f1:
-                    hub_search = st.text_input("Real-Time Candidate Search (Search by Name, Email, Skill, or Rationale Keywords...)", "", key="hub_search_input")
+                    hub_search = st.text_input("Real-Time Candidate Search...", "", key="hub_search_input")
                 with h_f2:
                     unique_hub_decisions = list(dict.fromkeys([c.get("decision", "Shortlist") for c in shortlisted_cands]))
                     hub_decision_filter = st.multiselect("Filter by Decision", unique_hub_decisions, default=unique_hub_decisions, key="hub_dec_filter")
@@ -756,20 +864,24 @@ elif selected_screen == "Shortlist Hub & Scheduler":
                 st.download_button(
                     "Download Shortlisted Candidates Contact Outreach CSV",
                     data=outreach_csv,
-                    file_name=f"shortlist_outreach_{sel_role.lower().replace(' ', '_')}.csv",
+                    file_name=f"shortlist_outreach_{sel_role_sub1.lower().replace(' ', '_')}.csv",
                     mime="text/csv"
                 )
 
+        # Sub-Tab 2: Schedule an Interview
         with sub_tab2:
-            if not shortlisted_cands:
-                st.warning(f"No shortlisted candidates found for role '{sel_role}'.")
+            st.markdown("### Schedule an Interview")
+            sel_role_sub2 = st.selectbox("Select Target Role / JD for Interview", role_options, key="hub_role_sel_tab2")
+            shortlisted_cands_tab2 = get_shortlisted_candidates_by_role(sel_role_sub2)
+
+            if not shortlisted_cands_tab2:
+                st.warning(f"No shortlisted candidates found for role '{sel_role_sub2}'.")
             else:
-                st.markdown("### Schedule an Interview")
                 sc_col1, sc_col2 = st.columns([1, 1])
                 with sc_col1:
-                    cand_names = [f"{c['candidate_name']} ({c['email'] or 'No Email'}) — Role: {c['jd_title']}" for c in shortlisted_cands]
+                    cand_names = [f"{c['candidate_name']} ({c['email'] or 'No Email'}) — Role: {c['jd_title']}" for c in shortlisted_cands_tab2]
                     selected_cand_idx = st.selectbox("Select Candidate to Invite", range(len(cand_names)), format_func=lambda i: cand_names[i])
-                    target_cand = shortlisted_cands[selected_cand_idx]
+                    target_cand = shortlisted_cands_tab2[selected_cand_idx]
 
                     interview_round = st.selectbox("Interview Stage / Round", [
                         "Round 1: Technical & Systems Screening",
@@ -834,27 +946,112 @@ elif selected_screen == "Shortlist Hub & Scheduler":
                             results_summary=invite_summary
                         )
                         if res["success"]:
-                            st.success(f"Interview Invitation successfully dispatched to **{target_cand['candidate_name']}** at `{target_email}`!")
+                            st.success(f"Interview invitation email successfully sent to '{target_cand['candidate_name']}' ({target_email})!")
                         else:
-                            st.warning(f"{res['message']}")
+                            st.error(f"Failed to send email: {res['message']}")
 
+        # Sub-Tab 3: Candidate Dossiers
         with sub_tab3:
-            if not shortlisted_cands:
-                st.warning(f"No shortlisted candidates found for role '{sel_role}'.")
+            st.markdown("### Candidate Dossiers")
+            sel_role_sub3 = st.selectbox("Filter Dossiers by Target Role", role_options, key="hub_role_sel_tab3")
+            shortlisted_cands_tab3 = get_shortlisted_candidates_by_role(sel_role_sub3)
+
+            if not shortlisted_cands_tab3:
+                st.warning(f"No candidate dossiers found for role '{sel_role_sub3}'.")
             else:
-                for c in shortlisted_cands:
-                    with st.expander(f"Candidate: {c['candidate_name']} — {c['decision']}"):
-                        ring_h = render_confidence_ring(c['score_0_100'], c['decision'], size=44)
-                        chip_h = render_chip(c['decision'], kind="decision")
-                        flag_h = render_chip(c.get("flags", "none"), kind="flag")
-                        st.markdown(f"<div style='display: flex; align-items: center; gap: 12px; margin-bottom: 12px;'>{ring_h} {chip_h} {flag_h}</div>", unsafe_allow_html=True)
-                        c1, c2 = st.columns(2)
-                        c1.markdown(f"**Email**: `{c['email']}`")
-                        c2.markdown(f"**Phone**: `{c['phone']}`")
-                        st.markdown(f"**Target Role**: `{c['jd_title']}`")
-                        st.markdown(f"**Recruiter Rationale**: {c['rationale']}")
-                        st.markdown(f"**Key Strengths**: {c['key_strengths']}")
-                        st.markdown(f"**Key Gaps**: {c['key_gaps']}")
+                for c in shortlisted_cands_tab3:
+                    with st.expander(f"Candidate: {c['candidate_name']} ({c['resume_filename']}) — {c['jd_title']}"):
+                        ring_html = render_confidence_ring(c['score_0_100'], c['decision'], size=44)
+                        chip_html = render_chip(c['decision'], kind="decision")
+                        flag_html = render_chip(c['flags'], kind="flag")
+
+                        st.markdown(f"""
+                        <div style="display: flex; align-items: center; justify-content: space-between; margin-bottom: 12px; background: #14141C; padding: 12px 16px; border-radius: 10px; border: 1px solid #26262F;">
+                          <div style="display: flex; align-items: center; gap: 14px;">
+                            {ring_html}
+                            <div>
+                              <div style="font-weight: 600; font-size: 1.05rem; color: #F2F1F7;">{c['candidate_name']}</div>
+                              <div style="font-size: 0.8rem; color: #8E8CA3; font-family: 'JetBrains Mono', monospace;">Role: {c['jd_title']} | File: {c['resume_filename']}</div>
+                            </div>
+                          </div>
+                          <div style="display: flex; align-items: center; gap: 10px;">
+                            {chip_html}
+                            {flag_html}
+                          </div>
+                        </div>
+                        """, unsafe_allow_html=True)
+
+                        st.markdown(f"**Contact Info**: Email: `{c.get('email') or 'N/A'}` | Phone: `{c.get('phone') or 'N/A'}`")
+                        st.markdown(f"**Rationale**: {c.get('rationale')}")
+                        st.markdown(f"**Key Strengths**: {c.get('key_strengths')}")
+                        st.markdown(f"**Key Gaps**: {c.get('key_gaps')}")
+
+        # Sub-Tab 4: Side-by-Side Comparison Matrix
+        with sub_tab4:
+            st.markdown("### ⚔️ Candidate Side-by-Side Comparison Matrix")
+            sel_role_sub4 = st.selectbox("Select Target Role for Comparison", role_options, key="hub_role_sel_tab4")
+            cands_tab4 = get_shortlisted_candidates_by_role(sel_role_sub4)
+
+            if len(cands_tab4) < 2:
+                st.info(f"At least 2 candidates needed in role '{sel_role_sub4}' to perform side-by-side comparison.")
+            else:
+                cmp_col1, cmp_col2 = st.columns(2)
+                cand_names = [f"{c['candidate_name']} ({c['score_0_100']} Fit Score)" for c in cands_tab4]
+
+                with cmp_col1:
+                    idx1 = st.selectbox("Select Candidate A", range(len(cand_names)), index=0, format_func=lambda i: cand_names[i], key="cmp_cand_a")
+                    c1 = cands_tab4[idx1]
+
+                with cmp_col2:
+                    default_idx2 = 1 if len(cand_names) > 1 else 0
+                    idx2 = st.selectbox("Select Candidate B", range(len(cand_names)), index=default_idx2, format_func=lambda i: cand_names[i], key="cmp_cand_b")
+                    c2 = cands_tab4[idx2]
+
+                st.markdown("---")
+
+                col_a, col_b = st.columns(2)
+                for col, c in zip([col_a, col_b], [c1, c2]):
+                    with col:
+                        ring = render_confidence_ring(c["score_0_100"], c["decision"], size=52)
+                        dec_chip = render_chip(c["decision"], kind="decision")
+                        flag_chip = render_chip(c.get("flags", "none"), kind="flag")
+                        skill_tags = render_skill_tags(c.get("key_strengths", ""))
+
+                        st.markdown(f"""
+                        <div style="background: var(--surface-bg); border: 1px solid var(--border-hairline); border-radius: 14px; padding: 20px; font-family: 'Inter', sans-serif;">
+                          <div style="display: flex; align-items: center; justify-content: space-between; margin-bottom: 14px;">
+                            <div>
+                              <h3 style="margin: 0; font-size: 1.2rem; color: var(--text-primary);">{c['candidate_name']}</h3>
+                              <div style="font-size: 0.8rem; color: var(--text-secondary); font-family: 'JetBrains Mono', monospace; margin-top: 3px;">File: {c['resume_filename']}</div>
+                            </div>
+                            {ring}
+                          </div>
+                          <div style="display: flex; gap: 8px; margin-bottom: 14px;">
+                            {dec_chip} {flag_chip}
+                          </div>
+                          <div style="margin-bottom: 12px;">
+                            <div style="font-size: 0.78rem; font-weight: 600; text-transform: uppercase; color: var(--text-muted); margin-bottom: 4px;">Target Role</div>
+                            <div style="font-size: 0.9rem; font-weight: 500; color: var(--text-primary);">{c['jd_title']}</div>
+                          </div>
+                          <div style="margin-bottom: 12px;">
+                            <div style="font-size: 0.78rem; font-weight: 600; text-transform: uppercase; color: var(--text-muted); margin-bottom: 4px;">Contact Info</div>
+                            <div style="font-size: 0.84rem; color: var(--text-secondary);">Email: <code style="color: var(--brand-accent);">{c.get('email') or 'N/A'}</code> | Phone: <code style="color: var(--text-primary);">{c.get('phone') or 'N/A'}</code></div>
+                          </div>
+                          <div style="margin-bottom: 12px;">
+                            <div style="font-size: 0.78rem; font-weight: 600; text-transform: uppercase; color: var(--text-muted); margin-bottom: 4px;">Key Strengths & Extracted Skills</div>
+                            <div style="font-size: 0.84rem; color: var(--text-secondary); line-height: 1.4;">{c.get('key_strengths')}</div>
+                            {skill_tags}
+                          </div>
+                          <div style="margin-bottom: 12px;">
+                            <div style="font-size: 0.78rem; font-weight: 600; text-transform: uppercase; color: #FB7185; margin-bottom: 4px;">Qualification Gaps</div>
+                            <div style="font-size: 0.84rem; color: var(--text-secondary); line-height: 1.4;">{c.get('key_gaps')}</div>
+                          </div>
+                          <div>
+                            <div style="font-size: 0.78rem; font-weight: 600; text-transform: uppercase; color: var(--text-muted); margin-bottom: 4px;">AI Rationale</div>
+                            <div style="font-size: 0.84rem; color: var(--text-secondary); line-height: 1.4; background: rgba(255,255,255,0.03); padding: 10px; border-radius: 8px;">{c.get('rationale')}</div>
+                          </div>
+                        </div>
+                        """, unsafe_allow_html=True)
 
 # ==========================================
 # SCREEN 3: RESUME REPOSITORY (SUB-SCREEN TABS)
