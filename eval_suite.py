@@ -225,7 +225,45 @@ def run_eval_suite(api_key_override: str = None):
     print("=" * 80)
     print("💾 RUN DATA PERSISTED: Saved all evaluation records to SQLite DB ('resume_shortlister.db') & 'eval_output.csv'.\n")
 
-    return passed_count == total_count
+    # Execute Test Case 17: JD Extraction Failure Safeguard
+    jd_fail_test_passed = test_jd_extraction_failure_case()
+
+    return passed_count == total_count and jd_fail_test_passed
+
+def test_jd_extraction_failure_case() -> bool:
+    """Test Case 17: Simulates JD extraction failure (mocking Gemini call to raise Exception)
+    Asserts that the pipeline stops cleanly with JDExtractionError and produces 0 evaluation rows.
+    """
+    from unittest.mock import patch
+    from pipeline.jd_extractor import JDExtractionError
+
+    print("\n" + "=" * 80)
+    print("TEST CASE 17: JD EXTRACTION FAILURE SAFEGUARD (MOCKED MODEL FAILURE)")
+    print("=" * 80)
+
+    base_dir = Path(__file__).parent
+    test_jd_path = str(base_dir / "test_data" / "jd.txt")
+    test_resumes_dir = str(base_dir / "test_data")
+    eval_csv_output = str(base_dir / "eval_output_jd_fail_test.csv")
+
+    with patch("pipeline.jd_extractor.generate_content_safe", side_effect=Exception("Simulated model rate limit / network / Pydantic validation error")):
+        try:
+            results = run_pipeline(
+                jd_path=test_jd_path,
+                resumes_dir=test_resumes_dir,
+                output_csv_path=eval_csv_output
+            )
+            print("❌ FAIL: Pipeline did not raise JDExtractionError when JD extraction failed!")
+            return False
+        except JDExtractionError as e:
+            print(f"PASSED ✅: Pipeline stopped cleanly before evaluating resumes with JDExtractionError: {e}")
+            return True
+        except Exception as e:
+            if "Could not extract structured requirements" in str(e):
+                print(f"PASSED ✅: Pipeline stopped cleanly with exception: {e}")
+                return True
+            print(f"❌ FAIL: Pipeline raised unexpected exception type {type(e)}: {e}")
+            return False
 
 if __name__ == "__main__":
     parser = argparse.ArgumentParser(description="Run 16-Case Evaluation Suite")

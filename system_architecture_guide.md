@@ -95,7 +95,7 @@ When demonstrating or defending this project in an interview, present these **5 
 ### Stage 4: Structured Resume Profile Extraction (`pipeline/resume_extractor.py`)
 - Extracts a typed `ResumeProfile` object from candidate text:
   - `candidate_name`, `email`, `phone`, `total_years_experience`, `skills`, `work_history`, `education`, `is_empty_or_garbled`.
-- **Fast-Path Short Circuit**: Resumes with `< 25 words` or marked `unreadable_file` bypass LLM extraction and immediately return `is_empty_or_garbled = True` to conserve API tokens and prevent hallucination.
+- **Fast-Path Short Circuit**: Resumes with `< 35-40 words` or marked `unreadable_file` bypass LLM extraction and immediately return `is_empty_or_garbled = True` to conserve API tokens and prevent hallucination.
 
 ### Stage 5: Cross-Resume Duplicate Detection (`pipeline/duplicate_detector.py`)
 - **Identity Matching**: Compares normalized email, phone, and candidate name across the batch.

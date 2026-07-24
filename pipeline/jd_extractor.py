@@ -101,6 +101,10 @@ def validate_gemini_api_key(api_key: str) -> tuple[bool, str]:
             return False, "Invalid API key string. Please check your API key at Google AI Studio (https://aistudio.google.com/app/apikey)."
         return False, f"API Key Validation Error: {err_str}"
 
+class JDExtractionError(Exception):
+    """Custom exception raised when Job Description requirement extraction fails."""
+    pass
+
 def extract_jd_requirements(jd_text: str) -> JDRequirements:
     """Dynamically extracts structured job requirements from raw JD text using Gemini."""
     model_name = get_current_model_name()
@@ -132,13 +136,6 @@ Job Description Text:
         logger.error(f"Error during JD requirement extraction with model '{model_name}': {e}")
         if "API_KEY_INVALID" in str(e) or "INVALID_ARGUMENT" in str(e):
             raise ValueError("The provided GEMINI_API_KEY is invalid or unauthorized. Please verify your key at https://aistudio.google.com/app/apikey.")
-        return JDRequirements(
-            role_title="Target Role",
-            seniority_level="Not Specified",
-            role_type="Full-time",
-            min_years_experience=0.0,
-            must_have_skills=["Relevant experience"],
-            nice_to_have_skills=[],
-            key_responsibilities=[],
-            domain_summary=jd_text[:200]
-        )
+        raise JDExtractionError(
+            f"Could not extract structured requirements from Job Description: {str(e)}"
+        ) from e

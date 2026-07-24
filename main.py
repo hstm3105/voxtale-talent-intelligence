@@ -9,7 +9,7 @@ from concurrent.futures import ThreadPoolExecutor
 from models import EvaluationResult, ResumeProfile, FitAssessment
 from pipeline.ingestion import load_job_description, load_resumes_from_directory
 from pipeline.security import scan_heuristic_prompt_injection
-from pipeline.jd_extractor import extract_jd_requirements, get_clean_api_key
+from pipeline.jd_extractor import extract_jd_requirements, get_clean_api_key, JDExtractionError
 from pipeline.resume_extractor import extract_resume_profile
 from pipeline.duplicate_detector import detect_duplicates
 from pipeline.fit_evaluator import evaluate_fit

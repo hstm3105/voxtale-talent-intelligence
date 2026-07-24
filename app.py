@@ -18,7 +18,7 @@ import streamlit as st
 from models import ResumeDocument, EvaluationResult
 from pipeline.ingestion import load_job_description, load_single_file
 from pipeline.security import scan_heuristic_prompt_injection
-from pipeline.jd_extractor import extract_jd_requirements, validate_gemini_api_key
+from pipeline.jd_extractor import extract_jd_requirements, validate_gemini_api_key, JDExtractionError
 from pipeline.resume_extractor import extract_resume_profile
 from pipeline.duplicate_detector import detect_duplicates
 from pipeline.fit_evaluator import evaluate_fit
@@ -625,6 +625,10 @@ if selected_screen == "Run Shortlisting Pipeline":
                     st.session_state["latest_results"] = results
                     st.session_state["latest_run_id"] = run_id
 
+                except JDExtractionError as err:
+                    status_box.update(label="Pipeline Execution Failed (JD Extraction Error)", state="error", expanded=True)
+                    st.error(f"Could not extract structured requirements from the job description — the run was stopped before evaluating any resumes. {err}")
+                    save_log(run_id, "JD_EXTRACTION_FAILED", str(err), "ERROR")
                 except Exception as err:
                     status_box.update(label="Pipeline Execution Failed", state="error", expanded=True)
                     st.error(f"Error during execution: {err}")
