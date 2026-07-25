@@ -10,6 +10,36 @@
 
 ---
 
+## 🌐 Live Application & Repositories
+
+| Link Type | URL |
+| :--- | :--- |
+| **🚀 Live Production Web App** | [**voxtale-talent-intelligence.streamlit.app**](https://voxtale-talent-intelligence.streamlit.app/) |
+| **📂 Source Code Repository** | [**github.com/hstm3105/voxtale-talent-intelligence**](https://github.com/hstm3105/voxtale-talent-intelligence) |
+
+---
+
+## ⚡ How to Test & Verify in 60 Seconds
+
+You can evaluate and test VoxTale immediately using the pre-packaged sample files in the [`sample_data/`](sample_data/) folder:
+
+### 1. Test on the Live Web Application (Instant Web Access)
+1. Open the [**Live Web App**](https://voxtale-talent-intelligence.streamlit.app/).
+2. Enter your **Gemini API Key** in the top-right **⚙️ Settings** modal (or configure it via environment).
+3. Navigate to **Workspace 1: 🚀 Run Shortlisting Pipeline**.
+4. Copy & paste the contents of [`sample_data/sample_jd.txt`](sample_data/sample_jd.txt) into the Job Description field.
+5. Drag and drop the candidate resume files from [`sample_data/`](sample_data/) (e.g. `01_alice_johnson_shortlist.txt`, `02_bob_smith_reject.txt`, `03_carol_danvers_maybe.txt`, etc.).
+6. Click **Run Shortlisting Pipeline** to watch live stage execution, inspect fit scores, view candidate dossiers, compare candidates side-by-side, and sync to Google Sheets!
+
+### 2. Test via Terminal CLI
+```bash
+# Set your API Key and run against pre-packaged sample files
+export GEMINI_API_KEY="your_api_key_here"
+python main.py --jd sample_data/sample_jd.txt --resumes sample_data/ --output output.csv
+```
+
+---
+
 ## 🌟 Architectural Overview & Core Capabilities
 
 VoxTale replaces generic keyword matchers with an **8-Stage Autonomous Agentic Pipeline** backed by deterministic guardrails, two-layer prompt injection security, and human-in-the-loop recruiter memory.
@@ -97,16 +127,6 @@ The application provides 5 dedicated workspaces designed for recruiter productiv
    streamlit run app.py
    ```
    Open your browser at `http://localhost:8501`.
-
----
-
-## 🖥️ Command Line Interface (CLI)
-
-Run the full evaluation pipeline directly from your terminal:
-
-```bash
-python main.py --jd sample_data/sample_jd.txt --resumes sample_data/ --output output.csv
-```
 
 ---
 
