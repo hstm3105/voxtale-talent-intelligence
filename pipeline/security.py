@@ -1,8 +1,5 @@
 import unicodedata
 from typing import Tuple
-from google.genai import types
-from models import InjectionScanResult
-from pipeline.jd_extractor import get_genai_client, generate_content_safe
 from config import INJECTION_KEYWORDS
 from utils.logger import logger
 
@@ -65,6 +62,10 @@ Candidate Document Text:
 {cleaned_text[:3000]}
 """
     try:
+        from google.genai import types
+        from models import InjectionScanResult
+        from pipeline.jd_extractor import get_genai_client, generate_content_safe
+
         client = get_genai_client()
         response = generate_content_safe(
             client=client,
