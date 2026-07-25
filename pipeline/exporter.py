@@ -19,6 +19,7 @@ def export_results_to_csv(results: List[EvaluationResult], output_csv_path: str)
             writer.writerow([
                 res.resume_filename,
                 res.candidate_name,
+                getattr(res, "target_role", "Target Role"),
                 res.decision,
                 res.score_0_100,
                 res.key_strengths,

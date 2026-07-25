@@ -43,3 +43,10 @@ def format_list_to_string(items: list, default: str = "None specified") -> str:
     if not clean_items:
         return default
     return "; ".join(clean_items)
+
+def slugify_role(role_title: str) -> str:
+    """Sanitizes a job role title into a clean URL/filename/ID friendly slug."""
+    if not role_title or role_title == "Target Role":
+        return "target_role"
+    cleaned = re.sub(r'[^a-zA-Z0-9]+', '_', role_title).strip('_').lower()
+    return cleaned[:30] if cleaned else "target_role"

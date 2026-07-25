@@ -34,6 +34,7 @@ from sheets_sync import export_to_google_sheets, generate_excel_for_sheets
 from email_sender import send_results_email, DEFAULT_RECIPIENT_EMAIL, sanitize_str
 from config import CSV_HEADER, MODEL_MAPPING, get_current_model_name
 from pipeline.ui_components import render_confidence_ring, render_chip, build_candidate_html_table, render_kpi_card, render_skill_tags
+from utils.text_helpers import slugify_role
 
 # Page Configuration - Executive Sidebar Enabled Layout
 st.set_page_config(
@@ -580,8 +581,10 @@ if selected_screen == "Run Shortlisting Pipeline":
                     status_box.write("Stage 3: Gemini Dynamic JD Requirement Extraction — Analyzing JD structure...")
                     jd_requirements = extract_jd_requirements(jd_text)
                     st.session_state["latest_jd_title"] = jd_requirements.role_title
-                    status_box.write(f"Extracted Role: **{jd_requirements.role_title}** | Seniority: **{jd_requirements.seniority_level}**")
-                    save_log(run_id, "STAGE_3_JD", f"Extracted requirements for role '{jd_requirements.role_title}'", "INFO")
+                    role_slug = slugify_role(jd_requirements.role_title)
+                    run_id = f"run_{datetime.datetime.now().strftime('%Y%m%d_%H%M%S')}_{role_slug}_{uuid.uuid4().hex[:4]}"
+                    status_box.write(f"Extracted Role: **{jd_requirements.role_title}** | Seniority: **{jd_requirements.seniority_level}** | Run ID: `{run_id}`")
+                    save_log(run_id, "STAGE_3_JD", f"Extracted requirements for role '{jd_requirements.role_title}' [Run ID: {run_id}]", "INFO")
                     progress_bar.progress(45, text="Stage 3/8: JD Extraction Complete")
 
                     status_box.write("Stage 4: Resume Structured Extraction — Extracting candidate profiles & contact info...")
@@ -611,7 +614,8 @@ if selected_screen == "Run Shortlisting Pipeline":
                             fit=fit_assessment,
                             is_injection=is_inj,
                             injection_reason=reason,
-                            is_duplicate=is_dup
+                            is_duplicate=is_dup,
+                            target_role=jd_requirements.role_title
                         )
                         results.append(final_record)
                         save_result(run_id, final_record)
@@ -1160,8 +1164,24 @@ elif selected_screen == "Resume Repository":
 
         with repo_sub1:
             run_df = pd.DataFrame(runs)
+
+            f_col1, f_col2 = st.columns([1.5, 1])
+            with f_col1:
+                all_repo_roles = ["All Roles"] + sorted([str(r) for r in run_df["jd_title"].dropna().unique() if str(r).strip()])
+                sel_repo_role = st.selectbox("Filter History by Target Role", all_repo_roles, key="repo_role_filter")
+            with f_col2:
+                search_run_id = st.text_input("Search History by Run ID...", "", key="repo_search_run_id")
+
+            filtered_run_df = run_df.copy()
+            if sel_repo_role != "All Roles":
+                filtered_run_df = filtered_run_df[filtered_run_df["jd_title"].str.lower() == sel_repo_role.lower()]
+
+            if search_run_id.strip():
+                sq = search_run_id.strip().lower()
+                filtered_run_df = filtered_run_df[filtered_run_df["run_id"].str.lower().str.contains(sq)]
+
             st.dataframe(
-                run_df,
+                filtered_run_df if not filtered_run_df.empty else run_df,
                 column_config={
                     "run_id": st.column_config.TextColumn("Run Identifier", width="medium"),
                     "timestamp": st.column_config.TextColumn("Execution Date & Time", width="medium"),
@@ -1174,7 +1194,8 @@ elif selected_screen == "Resume Repository":
                 hide_index=True
             )
 
-            selected_run_id = st.selectbox("Select Run ID to Inspect Details", run_df["run_id"].unique(), key="repo_run_sel")
+            avail_runs = filtered_run_df["run_id"].unique() if not filtered_run_df.empty else run_df["run_id"].unique()
+            selected_run_id = st.selectbox("Select Run ID to Inspect Details", avail_runs, key="repo_run_sel")
             if selected_run_id:
                 st.markdown(f"#### Evaluation Results for Run: `{selected_run_id}`")
                 run_results = get_results_by_run(selected_run_id)
@@ -1182,7 +1203,22 @@ elif selected_screen == "Resume Repository":
                     st.markdown(build_candidate_html_table(run_results), unsafe_allow_html=True)
 
         with repo_sub2:
-            sel_run_resumes = st.selectbox("Select Run ID for Stored Resumes", [r["run_id"] for r in runs], key="repo_resumes_sel")
+            r_col1, r_col2 = st.columns([1.5, 1])
+            with r_col1:
+                all_res_roles = ["All Roles"] + sorted([str(r) for r in run_df["jd_title"].dropna().unique() if str(r).strip()])
+                sel_res_role = st.selectbox("Filter Resumes by Target Role", all_res_roles, key="repo_resumes_role_filter")
+            with r_col2:
+                search_res_run = st.text_input("Search Resumes by Run ID...", "", key="repo_search_res_run")
+
+            filtered_res_runs = run_df.copy()
+            if sel_res_role != "All Roles":
+                filtered_res_runs = filtered_res_runs[filtered_res_runs["jd_title"].str.lower() == sel_res_role.lower()]
+            if search_res_run.strip():
+                sq = search_res_run.strip().lower()
+                filtered_res_runs = filtered_res_runs[filtered_res_runs["run_id"].str.lower().str.contains(sq)]
+
+            avail_res_run_ids = filtered_res_runs["run_id"].unique() if not filtered_res_runs.empty else [r["run_id"] for r in runs]
+            sel_run_resumes = st.selectbox("Select Run ID for Stored Resumes", avail_res_run_ids, key="repo_resumes_sel")
             if sel_run_resumes:
                 stored_resumes = get_resumes_by_run(sel_run_resumes)
                 if stored_resumes:

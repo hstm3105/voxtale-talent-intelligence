@@ -56,9 +56,10 @@ class ResumeDocument(BaseModel):
     extraction_error: Optional[str] = None
 
 class EvaluationResult(BaseModel):
-    """Final output record strictly matching the output CSV contract schema with candidate contact info."""
+    """Final output record strictly matching the output CSV contract schema with candidate contact info and role."""
     resume_filename: str
     candidate_name: str
+    target_role: str = "Target Role"
     decision: str  # Shortlist / Maybe / Reject / Needs Manual Review
     score_0_100: int
     key_strengths: str

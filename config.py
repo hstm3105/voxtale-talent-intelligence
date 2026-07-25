@@ -79,6 +79,7 @@ INJECTION_KEYWORDS = [
 CSV_HEADER = [
     "resume_filename",
     "candidate_name",
+    "target_role",
     "decision",
     "score_0_100",
     "key_strengths",

@@ -16,6 +16,7 @@ from pipeline.fit_evaluator import evaluate_fit
 from pipeline.decision_engine import make_decision
 from pipeline.exporter import export_results_to_csv
 from database import save_run, save_resume, save_result, save_log
+from utils.text_helpers import slugify_role
 from utils.logger import logger
 
 def run_pipeline(jd_path: str, resumes_dir: str, output_csv_path: str) -> List[EvaluationResult]:
@@ -48,6 +49,9 @@ def run_pipeline(jd_path: str, resumes_dir: str, output_csv_path: str) -> List[E
     # Stage 3: JD Requirement Extraction
     jd_requirements = extract_jd_requirements(jd_raw_text)
     jd_filename = Path(jd_path).name
+    role_slug = slugify_role(jd_requirements.role_title)
+    run_id = f"run_{datetime.datetime.now().strftime('%Y%m%d_%H%M%S')}_{role_slug}_{uuid.uuid4().hex[:4]}"
+    logger.info(f"Generated Role-Aware Run ID: '{run_id}' for role '{jd_requirements.role_title}'")
 
     # Stage 4: Resume Structured Extraction (Concurrent Worker Pool)
     logger.info(f"Extracting profiles for {len(resume_docs)} candidates concurrently...")
@@ -75,7 +79,8 @@ def run_pipeline(jd_path: str, resumes_dir: str, output_csv_path: str) -> List[E
                 fit=fit_assessment,
                 is_injection=is_inj,
                 injection_reason=reason,
-                is_duplicate=is_dup
+                is_duplicate=is_dup,
+                target_role=jd_requirements.role_title
             )
         except Exception as e:
             logger.error(f"Unhandled per-candidate pipeline exception for {doc.filename}: {e}")
@@ -99,7 +104,8 @@ def run_pipeline(jd_path: str, resumes_dir: str, output_csv_path: str) -> List[E
                 fit=fallback_fit,
                 is_injection=is_inj,
                 injection_reason=reason,
-                is_duplicate=is_dup
+                is_duplicate=is_dup,
+                target_role=jd_requirements.role_title
             )
 
     items = list(zip(resume_docs, resume_profiles, security_scans))

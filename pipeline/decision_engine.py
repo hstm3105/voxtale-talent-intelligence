@@ -9,7 +9,8 @@ def make_decision(
     fit: FitAssessment,
     is_injection: bool,
     injection_reason: str,
-    is_duplicate: bool
+    is_duplicate: bool,
+    target_role: str = "Target Role"
 ) -> EvaluationResult:
     """Deterministic, rules-based engine mapping score and flags to final recruiter decision."""
 
@@ -75,6 +76,7 @@ def make_decision(
     result = EvaluationResult(
         resume_filename=doc.filename,
         candidate_name=candidate_name,
+        target_role=target_role,
         decision=decision,
         score_0_100=score,
         key_strengths=strengths_str,
