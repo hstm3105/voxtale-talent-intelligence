@@ -16,29 +16,34 @@ def extract_spreadsheet_id(url_or_id: str) -> str:
         return match.group(1)
     return clean
 
-def generate_excel_for_sheets(results_data: List[Dict[str, Any]]) -> bytes:
+def generate_excel_for_sheets(results_data: List[Dict[str, Any]], jd_title: Optional[str] = None) -> bytes:
     """Generates a downloadable Excel (.xlsx) file bytes formatted for Google Sheets import."""
-    header = ["resume_filename", "candidate_name", "decision", "score_0_100", "key_strengths", "key_gaps", "flags", "rationale"]
+    header = ["resume_filename", "candidate_name", "target_role", "decision", "score_0_100", "key_strengths", "key_gaps", "flags", "rationale"]
     df = pd.DataFrame(results_data)
     
     # Ensure all columns exist in contract order
     for col in header:
         if col not in df.columns:
-            df[col] = ""
+            if col == "target_role" and jd_title:
+                df[col] = jd_title
+            else:
+                df[col] = ""
     df = df[header]
 
+    clean_sheet_title = re.sub(r'[\:\?\*\[\]\\\/]', ' ', jd_title or 'Shortlist Results').strip()[:28]
     output = io.BytesIO()
     with pd.ExcelWriter(output, engine='openpyxl') as writer:
-        df.to_excel(writer, index=False, sheet_name='Shortlist Results')
+        df.to_excel(writer, index=False, sheet_name=clean_sheet_title)
     return output.getvalue()
 
 def export_to_google_sheets(
     results_data: List[Dict[str, Any]], 
     spreadsheet_title: str = "Resume Shortlisting Results",
     service_account_dict: Optional[dict] = None,
-    spreadsheet_id_or_url: Optional[str] = None
+    spreadsheet_id_or_url: Optional[str] = None,
+    jd_title: Optional[str] = None
 ) -> Dict[str, Any]:
-    """Syncs evaluation results to a Google Sheet by creating a NEW timestamped tab per run."""
+    """Syncs evaluation results to a Google Sheet by creating a NEW role-aware timestamped tab per run."""
     import gspread
     
     gc = None
@@ -118,16 +123,28 @@ def export_to_google_sheets(
             except gspread.SpreadsheetNotFound:
                 sh = gc.create(spreadsheet_title)
 
-        # Generate unique timestamped tab name for this run
-        now_str = datetime.datetime.now().strftime("%Y-%m-%d %H:%M:%S")
-        tab_name = f"Run {now_str}"
+        # Extract role title from parameter or candidate records
+        role_name = jd_title
+        if not role_name and results_data:
+            role_name = results_data[0].get("target_role") or results_data[0].get("jd_title")
+        if not role_name or role_name == "Target Role":
+            role_name = "Target Role"
 
-        header = ["resume_filename", "candidate_name", "decision", "score_0_100", "key_strengths", "key_gaps", "flags", "rationale"]
+        # Sanitize role name for Google Sheets tab compatibility (remove invalid chars : ? * [ ] \ /)
+        clean_role_name = re.sub(r'[\:\?\*\[\]\\\/]', ' ', role_name).strip()
+        now_str = datetime.datetime.now().strftime("%Y-%m-%d %H:%M")
+        
+        # Max length for Google Sheet tab title is 100 chars
+        tab_name = f"{clean_role_name} - {now_str}"[:95]
+
+        header = ["resume_filename", "candidate_name", "target_role", "decision", "score_0_100", "key_strengths", "key_gaps", "flags", "rationale"]
         new_rows = []
         for item in results_data:
+            cand_role = item.get("target_role") or role_name
             new_rows.append([
                 str(item.get("resume_filename", "")),
                 str(item.get("candidate_name", "")),
+                str(cand_role),
                 str(item.get("decision", "")),
                 int(item.get("score_0_100", 0)),
                 str(item.get("key_strengths", "")),
@@ -145,7 +162,7 @@ def export_to_google_sheets(
         # Populate header + records into the new timestamped tab
         worksheet.update(values=[header] + new_rows, range_name="A1")
         
-        logger.info(f"Successfully created timestamped tab '{tab_name}' with {len(new_rows)} records in Google Sheet: {sh.url}")
+        logger.info(f"Successfully created role-aware tab '{tab_name}' with {len(new_rows)} records in Google Sheet: {sh.url}")
         return {
             "success": True,
             "message": f"Successfully created tab '{tab_name}' with {len(new_rows)} records in Google Sheet!",

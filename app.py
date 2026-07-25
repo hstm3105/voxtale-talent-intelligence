@@ -714,10 +714,12 @@ if selected_screen == "Run Shortlisting Pipeline":
             if st.button("Sync to Live Google Sheet", use_container_width=True):
                 sa_dict = st.session_state.get("service_account_dict")
                 sheet_url = st.session_state.get("target_sheet_url")
+                active_role = st.session_state.get("latest_jd_title") or "Target Role"
                 sync_res = export_to_google_sheets(
                     data_dicts,
                     service_account_dict=sa_dict,
-                    spreadsheet_id_or_url=sheet_url
+                    spreadsheet_id_or_url=sheet_url,
+                    jd_title=active_role
                 )
                 if sync_res["success"]:
                     st.success(f"{sync_res['message']} [Open Google Sheet]({sync_res['url']})")
@@ -727,7 +729,8 @@ if selected_screen == "Run Shortlisting Pipeline":
         with btn_col3:
             if st.button("Mail Results Excel (in XLSX format)", use_container_width=True):
                 target_email = st.session_state.get("recipient_email", DEFAULT_RECIPIENT_EMAIL)
-                excel_bytes = generate_excel_for_sheets(data_dicts)
+                active_role = st.session_state.get("latest_jd_title") or "Target Role"
+                excel_bytes = generate_excel_for_sheets(data_dicts, jd_title=active_role)
                 
                 email_res = send_results_email(
                     recipient_email=target_email,
