@@ -1,106 +1,108 @@
-# VoxTale - Agentic Resume Shortlister & Talent Intelligence
+# VoxTale — Agentic Talent Intelligence & Candidate Screening Platform
 
-An enterprise-grade, multi-stage agentic candidate screening and decision platform powered by Python, Streamlit, SQLite, and Google's Gemini API (default model: **Gemini 3.5 Flash Lite**).
+[![Python 3.9+](https://img.shields.io/badge/python-3.9+-3776AB.svg?style=flat&logo=python&logoColor=white)](https://www.python.org/)
+[![Streamlit](https://img.shields.io/badge/streamlit-1.30+-FF4B4B.svg?style=flat&logo=streamlit&logoColor=white)](https://streamlit.io/)
+[![Google Gemini API](https://img.shields.io/badge/Gemini_API-3.5_Flash-4285F4.svg?style=flat&logo=google&logoColor=white)](https://ai.google.dev/)
+[![SQLite](https://img.shields.io/badge/Database-SQLite-003B57.svg?style=flat&logo=sqlite&logoColor=white)](https://www.sqlite.org/)
+[![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg?style=flat)](LICENSE)
 
-Designed to analyze any Job Description (JD) and candidate resumes in batch across multiple formats (TXT, PDF, DOCX), extracting structured requirements and presenting an interactive Studio UI with live pipeline stage visibility, database resume repository, side-by-side candidate comparison matrix, Google Sheets live sync, and automated SMTP email invitations.
-
----
-
-## 🌟 Key Features
-
-1. **Studio-Grade Web Application (Streamlit)**: 
-   - Executive feature-oriented sidebar navigation menu with real-time candidate and run counters.
-   - Studio Dark Mode theme (`#0B0B10`) with glassmorphic metric cards, circular score rings, and high-contrast typography.
-2. **5 Integrated Application Workspaces**:
-   - **🚀 Run Shortlisting Pipeline**: Multi-file drag-and-drop batch ingestion with real-time execution progress.
-   - **📊 Shortlist Hub & Scheduler**: 4 dedicated sub-tabs:
-     - `Master Candidate List`: Real-time candidate search, score rings, decision/flag filters, and embedded JD role picker.
-     - `Schedule an Interview`: Candidate contact extraction, email draft generator, and automated SMTP dispatch.
-     - `Candidate Dossiers`: Complete candidate evaluation dossiers with strengths, gaps, and AI rationales.
-     - `⚔️ Side-by-Side Comparison`: Interactive comparison matrix comparing Candidate A and Candidate B side-by-side, featuring automatic selection resets on role change.
-   - **📁 Resume Repository**: Queryable SQLite database history of all past pipeline runs, raw candidate text, and full evaluation results.
-   - **🧠 Recruiter Feedback Loop**: Labeled few-shot feedback queue with two-stage admin approval (`is_validated`).
-   - **📜 System Execution Logs**: Stage-by-stage pipeline logs, execution timestamps, and security events.
-3. **Multi-Format Ingestion Cascade**: Process TXT, PDF (`pdfplumber` layout-preserving parser + `pypdf` fallback), and DOCX (`python-docx`) files in batch with cross-format 4-gram Jaccard duplicate detection.
-4. **8-Stage Agentic Pipeline**: Autonomous JD requirement extraction, profile extraction, candidate isolation, fit evaluation, and deterministic guardrail rules engine.
-5. **Gemini Foundation Models**: Configurable support for **Gemini 3.5 Flash Lite** (Default), **Gemini 3 Flash**, and **Gemini 3.6 Flash**, with automatic 429 rate-limit exponential backoff retries.
-6. **Robust Two-Layer Security & Edge Case Defense**:
-   - **Sparse Resume Short-Circuit**: Fast-path detection of stub/empty resumes (< 40 words) flagging `insufficient_information`.
-   - **Two-Layer Prompt Injection Scanner**:
-     - *Layer 1 (Fast-Pass Heuristic)*: Substring matching against `INJECTION_KEYWORDS` with Unicode NFKD normalization (zero latency/cost).
-     - *Layer 2 (Semantic LLM Classification)*: Dedicated structured Gemini call using `InjectionScanResult` schema to detect paraphrased instructions (*"disregard guidance given earlier"*) and indirect executive clearance claims.
-     - *Concurrent Execution*: Runs across candidate documents in Stage 2 via `ThreadPoolExecutor(max_workers=5)` to avoid batch latency.
-7. **Loud JD Extraction Safeguard (`JDExtractionError`)**:
-   - Eliminates silent fallbacks during Job Description requirement extraction.
-   - On network errors, rate limits, or schema validation failures, raises `JDExtractionError` and halts execution immediately before evaluating candidate resumes, preventing evaluation against meaningless requirement sets.
-8. **Clean Skill Token Deduplication**: Intelligent technical keyword extractor (`extract_skill_tokens`) preventing multi-sentence duplication between card body text and skill pill badges.
-9. **Exhaustive Error Safeguards & Streamlit Cloud Deployment Ready**:
-   - Every database query in `database.py` wrapped in protective `try...except` catch loops.
-   - Automated root directory `sys.path` resolution in `app.py` for seamless Streamlit Community Cloud deployment.
+**VoxTale** is an enterprise-grade, multi-stage agentic candidate screening and talent intelligence platform. Powered by Python, Streamlit, SQLite, and Google's Gemini API, VoxTale dynamically analyzes Job Descriptions (JDs) and parses multi-format candidate resumes in batch (PDF, DOCX, TXT) to deliver audit-ready, unbiased recruitment evaluations.
 
 ---
 
-## 🛠️ Requirements & Local Setup
+## 🌟 Architectural Overview & Core Capabilities
 
-### Setup Instructions
+VoxTale replaces generic keyword matchers with an **8-Stage Autonomous Agentic Pipeline** backed by deterministic guardrails, two-layer prompt injection security, and human-in-the-loop recruiter memory.
 
-1. Clone or navigate to the project repository:
+```
+┌─────────────────┐    ┌─────────────────────────┐    ┌───────────────────────────┐
+│ Batch Ingestion │ ──>│ Concurrent Security     │ ──>│ Dynamic JD Requirement    │
+│ (PDF, DOCX, TXT)│    │ (Heuristic + LLM Scan)  │    │ Extraction (Gemini)       │
+└─────────────────┘    └─────────────────────────┘    └───────────────────────────┘
+                                                                    │
+┌─────────────────┐    ┌─────────────────────────┐    ┌─────────────▼─────────────┐
+│ Duplicate Check │ <──│ Profile & Contact Info  │ <──│ Loud JDExtractionError    │
+│ (4-Gram Jaccard)│    │ Structured Parsing      │    │ Safeguard (No Fabrication)│
+└─────────────────┘    └─────────────────────────┘    └───────────────────────────┘
+        │
+┌───────▼─────────┐    ┌─────────────────────────┐    ┌───────────────────────────┐
+│ Gemini Fit      │ ──>│ Guardrail Decision Engine│ ─>│ Role-Aware Persistence    │
+│ Evaluation      │    │ (Shortlist/Maybe/Reject)│    │ (DB, CSV, Sheets, Email)  │
+└─────────────────┘    └─────────────────────────┘    └───────────────────────────┘
+```
+
+### Key Highlights
+
+- **8-Stage Autonomous Pipeline**: End-to-end multi-agent orchestration for ingestion, security scanning, requirement extraction, candidate profiling, duplicate detection, fit evaluation, deterministic decision scoring, and persistence.
+- **Two-Layer Prompt Injection Security**:
+  - *Layer 1 (Heuristic Fast-Pass)*: Substring pattern matching against known injection keywords with **Unicode NFKD Normalization** and zero-width character stripping to catch homoglyph evasion (0 ms latency / 0 API cost).
+  - *Layer 2 (Semantic LLM Classifier)*: Dedicated structured Gemini call (`InjectionScanResult`, `temperature=0.0`) detecting paraphrased override instructions, indirect commands, and fake executive clearance claims.
+  - *XML Prompt Isolation*: Untrusted resume text is isolated inside `<untrusted_candidate_resume_data>` tags guarded by strict system-level instructions.
+- **Loud Exception Safeguards (`JDExtractionError`)**: Eliminates silent fallback fabrications during JD parsing. On network failure, rate limit exhaustion, or schema invalidity, the pipeline fails loudly before evaluating candidates—preventing evaluation against empty requirement sets.
+- **Role-Aware Data Persistence**: Every run creates a role-slugified identifier (e.g. `run_20260726_143000_senior_backend_engineer_a1b2`) and exports the target role across SQLite, CSVs, Excel reports, and Google Sheets tabs.
+- **Human-in-the-Loop Recruiter Memory**: Recruiter decision corrections are submitted to an admin approval queue (`is_validated`). Validated feedback is dynamically injected into Gemini's evaluation prompt context as few-shot exemplars.
+
+---
+
+## 🎨 Interactive Studio Workspace (Streamlit)
+
+The application provides 5 dedicated workspaces designed for recruiter productivity and operational visibility:
+
+1. **🚀 Run Shortlisting Pipeline**: Batch file drag-and-drop uploader with real-time execution progress, live stage visibility, and status indicators.
+2. **📊 Shortlist Hub & Scheduler**:
+   - **Master Candidate List**: Multi-attribute search, decision/flag filters, score rings, and skill tag badges.
+   - **Schedule an Interview**: Automated email draft generator with one-click SMTP email invitation dispatch.
+   - **Candidate Dossiers**: In-depth candidate profiles featuring key strengths, qualification gaps, contact details, and AI rationales.
+   - **Candidate Comparison Matrix**: Side-by-side comparison of candidate profiles with automatic reset handlers when changing target roles.
+3. **📁 Resume Repository**: Fully queryable database of all past runs with **Target Role Dropdown Filters** and real-time **Run ID Search**.
+4. **🧠 Recruiter Feedback Loop**: Labeled feedback memory queue for reviewing, approving, and embedding recruiter decision corrections.
+5. **📜 System Execution Logs**: Real-time execution log timeline detailing stage events, warnings, and security alerts.
+
+---
+
+## 🚀 Quickstart & Local Setup
+
+### Prerequisites
+
+- **Python 3.9+**
+- **Google Gemini API Key** ([Get your API key here](https://aistudio.google.com/))
+
+### Installation
+
+1. **Clone the Repository**:
    ```bash
-   cd ~/Desktop/resume_shortlister
+   git clone https://github.com/hstm3105/voxtale-talent-intelligence.git
+   cd voxtale-talent-intelligence
    ```
 
-2. Create and activate a Python virtual environment:
+2. **Create and Activate a Virtual Environment**:
    ```bash
    python3 -m venv venv
-   source venv/bin/activate
+   source venv/bin/activate  # On Windows: venv\Scripts\activate
    ```
 
-3. Install required dependencies:
+3. **Install Dependencies**:
    ```bash
    pip install -r requirements.txt
    ```
 
-4. Set your Gemini API Key:
+4. **Set Your Gemini API Key**:
    ```bash
-   export GEMINI_API_KEY="your-gemini-api-key-here"
+   export GEMINI_API_KEY="your_api_key_here"
    ```
-   *Note: You can also configure your API key directly inside the app's top-right ⚙️ Settings modal or via Streamlit Secrets!*
+   *(Alternatively, you can enter your API Key in the web app's top-right ⚙️ Settings modal or configure it via `.streamlit/secrets.toml`)*
 
----
-
-## 💻 Running the Web Application
-
-To launch the interactive web application:
-
-```bash
-streamlit run app.py
-```
-
-Open your web browser at **`http://localhost:8501`**.
-
----
-
-## ☁️ Deploying to Streamlit Community Cloud
-
-1. Push the code to your GitHub repository:
+5. **Launch the Web Application**:
    ```bash
-   git add .
-   git commit -m "deploy: Prepare for Streamlit Cloud"
-   git push origin main
+   streamlit run app.py
    ```
-2. In [Streamlit Community Cloud](https://share.streamlit.io/), create a **New App**, select your repository `voxtale-talent-intelligence`, and set Main file path to `app.py`.
-3. In **Advanced Settings -> Secrets**, configure your keys:
-   ```toml
-   GEMINI_API_KEY = "AIzaSy..."
-   SENDER_EMAIL = "your-email@gmail.com"
-   SENDER_APP_PASSWORD = "abcd efgh ijkl mnop"
-   ```
+   Open your browser at `http://localhost:8501`.
 
 ---
 
-## 🖥️ Running via Command Line (CLI)
+## 🖥️ Command Line Interface (CLI)
 
-To run the pipeline directly via terminal:
+Run the full evaluation pipeline directly from your terminal:
 
 ```bash
 python main.py --jd sample_data/sample_jd.txt --resumes sample_data/ --output output.csv
@@ -108,34 +110,54 @@ python main.py --jd sample_data/sample_jd.txt --resumes sample_data/ --output ou
 
 ---
 
-## 🧪 Running the Automated Evaluation Suite
+## 🧪 Automated Evaluation Suite
 
-To execute the automated test suite against 16 edge cases:
+The codebase includes an automated test suite verifying 18 edge cases and adversarial attacks (including paraphrased prompt injections, indirect authority claims, unreadable files, overqualification, and duplicate submissions):
 
-1. Generate test data files:
-   ```bash
-   python generate_test_files.py
-   ```
+```bash
+# 1. Generate synthetic test dataset
+python generate_test_files.py
 
-2. Run the evaluation suite:
-   ```bash
-   python eval_suite.py
+# 2. Execute full evaluation test suite
+python eval_suite.py
+```
+
+---
+
+## 📊 Data Output Contract
+
+Exported CSVs, Excel reports, and Google Sheets tabs conform to the following schema:
+
+| Column | Type | Description | Vocabulary / Constraints |
+| :--- | :--- | :--- | :--- |
+| `resume_filename` | String | Source filename of candidate resume | e.g. `01_alice_johnson.pdf` |
+| `candidate_name` | String | Extracted candidate full name | e.g. `Alice Johnson` |
+| `target_role` | String | Extracted Job Description role title | e.g. `Senior Backend Engineer` |
+| `decision` | String | Final automated screening decision | `Shortlist` \| `Maybe` \| `Reject` \| `Needs Manual Review` |
+| `score_0_100` | Integer | Fit score derived by deterministic engine | `0` to `100` |
+| `key_strengths` | String | Key JD-aligned strengths | Semicolon-delimited string |
+| `key_gaps` | String | Identified qualification gaps | Semicolon-delimited string |
+| `flags` | String | Security or data quality flags | `none` \| `overqualified` \| `duplicate_submission` \| `insufficient_information` \| `possible_prompt_injection` \| `other` |
+| `rationale` | String | Audit-ready explanation of evaluation | Free-text string |
+| `email` | String | Extracted candidate email address | e.g. `alice@example.com` \| `N/A` |
+| `phone` | String | Extracted candidate phone number | e.g. `+1-555-0192` \| `N/A` |
+
+---
+
+## ☁️ Deployment Guide (Streamlit Community Cloud)
+
+1. Push your repository to GitHub.
+2. Log into [Streamlit Community Cloud](https://share.streamlit.io/) and create a **New App**.
+3. Select your repository `voxtale-talent-intelligence`, set Main file path to `app.py`.
+4. Under **Advanced Settings → Secrets**, configure your environment secrets:
+   ```toml
+   GEMINI_API_KEY = "AIzaSy..."
+   SENDER_EMAIL = "recruiter@example.com"
+   SENDER_APP_PASSWORD = "abcd efgh ijkl mnop"
    ```
 
 ---
 
-## 📊 Output CSV Contract
+## 📄 License
 
-The system outputs a CSV file conforming to the exact contract below:
-
-| Column | Description | Vocabulary / Constraints |
-| :--- | :--- | :--- |
-| `resume_filename` | Original filename of candidate resume | e.g. `01_alice_johnson_shortlist.txt` |
-| `candidate_name` | Extracted full candidate name | e.g. `Alice Johnson` |
-| `decision` | Final shortlisting decision | `Shortlist` \| `Maybe` \| `Reject` \| `Needs Manual Review` |
-| `score_0_100` | Integer fit score | `0` to `100` |
-| `key_strengths` | 2-3 concrete, JD-specific strengths | Semicolon-delimited string |
-| `key_gaps` | 2-3 concrete gaps or missing qualifications | Semicolon-delimited string |
-| `flags` | Security or data quality flags | `none` \| `overqualified` \| `duplicate_submission` \| `insufficient_information` \| `possible_prompt_injection` \| `other` |
-| `rationale` | Audit-ready summary explaining decision | Free-text string |
-
+Distributed under the MIT License. See [`LICENSE`](LICENSE) for details.
