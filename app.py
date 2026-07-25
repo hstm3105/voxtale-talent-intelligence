@@ -579,6 +579,7 @@ if selected_screen == "Run Shortlisting Pipeline":
 
                     status_box.write("Stage 3: Gemini Dynamic JD Requirement Extraction — Analyzing JD structure...")
                     jd_requirements = extract_jd_requirements(jd_text)
+                    st.session_state["latest_jd_title"] = jd_requirements.role_title
                     status_box.write(f"Extracted Role: **{jd_requirements.role_title}** | Seniority: **{jd_requirements.seniority_level}**")
                     save_log(run_id, "STAGE_3_JD", f"Extracted requirements for role '{jd_requirements.role_title}'", "INFO")
                     progress_bar.progress(45, text="Stage 3/8: JD Extraction Complete")
@@ -624,6 +625,7 @@ if selected_screen == "Run Shortlisting Pipeline":
 
                     st.session_state["latest_results"] = results
                     st.session_state["latest_run_id"] = run_id
+                    st.session_state["latest_jd_title"] = jd_requirements.role_title
 
                 except JDExtractionError as err:
                     status_box.update(label="Pipeline Execution Failed (JD Extraction Error)", state="error", expanded=True)
@@ -641,9 +643,17 @@ if selected_screen == "Run Shortlisting Pipeline":
         st.markdown("### Screening Results & Export Actions")
 
         data_dicts = [res.model_dump() for res in results]
-        active_role_title = st.session_state.get("latest_jd_title", "Target Role")
+        active_role_title = st.session_state.get("latest_jd_title", "")
+        if not active_role_title and "latest_run_id" in st.session_state:
+            run_details = get_results_by_run(st.session_state["latest_run_id"])
+            if run_details and run_details[0].get("target_role"):
+                active_role_title = run_details[0]["target_role"]
+        if not active_role_title:
+            active_role_title = "Target Role"
+
         for d in data_dicts:
             d["target_role"] = active_role_title
+            d["jd_title"] = active_role_title
         df = pd.DataFrame(data_dicts)
 
         kpi1, kpi2, kpi3, kpi4 = st.columns(4)
