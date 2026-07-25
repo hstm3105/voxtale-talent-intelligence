@@ -16,24 +16,30 @@ def extract_spreadsheet_id(url_or_id: str) -> str:
         return match.group(1)
     return clean
 
-def generate_excel_for_sheets(results_data: List[Dict[str, Any]], jd_title: Optional[str] = None) -> bytes:
+def generate_excel_for_sheets(
+    results_data: List[Dict[str, Any]], 
+    jd_title: Optional[str] = None,
+    *args,
+    **kwargs
+) -> bytes:
     """Generates a downloadable Excel (.xlsx) file bytes formatted for Google Sheets import."""
+    role_name = jd_title or kwargs.get("jd_title")
     header = ["resume_filename", "candidate_name", "target_role", "decision", "score_0_100", "key_strengths", "key_gaps", "flags", "rationale"]
     df = pd.DataFrame(results_data)
     
     # Ensure all columns exist in contract order
     for col in header:
         if col not in df.columns:
-            if col == "target_role" and jd_title:
-                df[col] = jd_title
+            if col == "target_role" and role_name:
+                df[col] = role_name
             else:
                 df[col] = ""
     df = df[header]
 
-    clean_sheet_title = re.sub(r'[\:\?\*\[\]\\\/]', ' ', jd_title or 'Shortlist Results').strip()[:28]
+    clean_sheet_title = re.sub(r'[\:\?\*\[\]\\\/]', ' ', role_name or 'Shortlist Results').strip()[:28]
     output = io.BytesIO()
     with pd.ExcelWriter(output, engine='openpyxl') as writer:
-        df.to_excel(writer, index=False, sheet_name=clean_sheet_title)
+        df.to_excel(writer, index=False, sheet_name=clean_sheet_title or 'Shortlist Results')
     return output.getvalue()
 
 def export_to_google_sheets(
@@ -41,7 +47,9 @@ def export_to_google_sheets(
     spreadsheet_title: str = "Resume Shortlisting Results",
     service_account_dict: Optional[dict] = None,
     spreadsheet_id_or_url: Optional[str] = None,
-    jd_title: Optional[str] = None
+    jd_title: Optional[str] = None,
+    *args,
+    **kwargs
 ) -> Dict[str, Any]:
     """Syncs evaluation results to a Google Sheet by creating a NEW role-aware timestamped tab per run."""
     import gspread
@@ -123,8 +131,8 @@ def export_to_google_sheets(
             except gspread.SpreadsheetNotFound:
                 sh = gc.create(spreadsheet_title)
 
-        # Extract role title from parameter or candidate records
-        role_name = jd_title
+        # Extract role title from parameter, kwargs, or candidate records
+        role_name = jd_title or kwargs.get("jd_title")
         if not role_name and results_data:
             role_name = results_data[0].get("target_role") or results_data[0].get("jd_title")
         if not role_name or role_name == "Target Role":
