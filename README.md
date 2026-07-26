@@ -28,7 +28,7 @@ You can evaluate and test VoxTale immediately using the pre-packaged sample file
 2. Enter your **Gemini API Key** in the top-right **⚙️ Settings** modal (or configure it via environment).
 3. Navigate to **Workspace 1: 🚀 Run Shortlisting Pipeline**.
 4. Copy & paste the contents of [`sample_data/sample_jd.txt`](sample_data/sample_jd.txt) into the Job Description field.
-5. Drag and drop the candidate resume files from [`sample_data/`](sample_data/) (e.g. `01_alice_johnson_shortlist.txt`, `02_bob_smith_reject.txt`, `03_carol_danvers_maybe.txt`, etc.).
+5. Drag and drop the candidate resume files from [`sample_data/`](sample_data/) (e.g. `ec01_strong_fit.txt`, `ec02_clear_reject.txt`, `ec05_prompt_injection_attempt.txt`, etc.).
 6. Click **Run Shortlisting Pipeline** to watch live stage execution, inspect fit scores, view candidate dossiers, compare candidates side-by-side, and sync to Google Sheets!
 
 ### 2. Test via Terminal CLI

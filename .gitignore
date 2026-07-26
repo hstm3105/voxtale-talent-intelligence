@@ -23,3 +23,11 @@ __pycache__/
 
 # Streamlit Local Secrets
 .streamlit/secrets.toml
+
+# Local Output Files
+*.csv
+
+# Internal Reference Documentation (Preserved locally)
+design_doc.md
+proof_of_agentic_architecture.*
+system_architecture_guide.md
