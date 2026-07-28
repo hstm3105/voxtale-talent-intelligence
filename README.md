@@ -1,4 +1,4 @@
-# VoxTale — Agentic Talent Intelligence & Candidate Screening Platform
+# VoxTale — Talent Intelligence & Candidate Screening Platform
 
 [![Python 3.9+](https://img.shields.io/badge/python-3.9+-3776AB.svg?style=flat&logo=python&logoColor=white)](https://www.python.org/)
 [![Streamlit](https://img.shields.io/badge/streamlit-1.30+-FF4B4B.svg?style=flat&logo=streamlit&logoColor=white)](https://streamlit.io/)
@@ -6,7 +6,7 @@
 [![SQLite](https://img.shields.io/badge/Database-SQLite-003B57.svg?style=flat&logo=sqlite&logoColor=white)](https://www.sqlite.org/)
 [![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg?style=flat)](LICENSE)
 
-**VoxTale** is an enterprise-grade, multi-stage agentic candidate screening and talent intelligence platform. Powered by Python, Streamlit, SQLite, and Google's Gemini API, VoxTale dynamically analyzes Job Descriptions (JDs) and parses multi-format candidate resumes in batch (PDF, DOCX, TXT) to deliver audit-ready, unbiased recruitment evaluations.
+**VoxTale** is an enterprise-grade, multi-stage candidate screening and talent intelligence platform. Powered by Python, Streamlit, SQLite, and Google's Gemini API, VoxTale dynamically analyzes Job Descriptions (JDs) and parses multi-format candidate resumes in batch (PDF, DOCX, TXT) to deliver audit-ready, unbiased recruitment evaluations.
 
 ---
 
